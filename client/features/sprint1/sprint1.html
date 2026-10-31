@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#3d5a80" />
+    <meta name="description" content="Track your LAAM Express parcel and view its delivery history." />
+    <title>Track Parcel | LAAM Express</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+    <script type="module" src="./js/main.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="../../index.html" aria-label="LAAM Express home"><span class="brand-mark">L<span class="brand-mark-box">E</span></span><span>LAAM <strong>EXPRESS</strong><small>DELIVERY MADE CLEAR</small></span></a>
+      <nav aria-label="Primary"><a href="../../index.html">Home</a> <a class="nav-active" href="./sprint1.html">Track parcel</a><span class="nav-note">Customer portal</span></nav>
+    </div>
+  </header>
+  <main id="main">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-dot"></span> LAAM EXPRESS / CUSTOMER TRACKING</p>
+          <h1>Your parcel's journey,<br/><em>all in one place.</em></h1>
+          <p class="hero-sub">From dispatch to your doorstep. Enter a tracking number to see the latest available update — no account required.</p>
+          <form class="search-form" id="tracking-form" novalidate>
+            <label for="tracking-input">TRACKING NUMBER</label>
+            <div class="search-controls"><input id="tracking-input" type="text" spellcheck="false" autocomplete="off" maxlength="64" placeholder="e.g. LAAM20260001" aria-describedby="tracking-hint tracking-error" required/><button id="tracking-submit" type="submit"><span>Track parcel</span><span aria-hidden="true">→</span></button></div>
+            <p class="field-hint" id="tracking-hint">Use the tracking number from your shipping confirmation.</p>
+            <p class="form-error" id="tracking-error" role="alert" hidden></p>
+          </form>
+          <!-- <div class="hero-assurance"><span>✓ No login needed</span><span>✓ Status &amp; history</span><span>✓ Read-only lookup</span></div> -->
+        </div>
+        <div class="hero-art" aria-hidden="true"><div class="art-grid"></div><div class="art-route route-one"></div><div class="art-route route-two"></div><div class="art-pin pin-a"></div><div class="art-pin pin-b"></div><div class="art-pin pin-c"></div><div class="art-package"><span class="box-top"></span><span class="box-front">L<span>↗</span></span></div><div class="art-floating"><span class="dot-green"></span> Shipment in motion</div><div class="art-tag">SIMPLE. TRACKABLE. RELIABLE.</div></div>
+      </div>
+    </section>
+    <section class="workspace container" aria-live="polite" aria-busy="false" id="workspace">
+      <div class="section-head"><div><p class="eyebrow eyebrow-dark">YOUR SHIPMENTS</p><h2 id="section-title">My parcels <span class="count" id="parcel-count">3 demo</span></h2><p class="section-description" id="section-description">Explore sample shipments or look up your own tracking number above.</p></div><span class="demo-label" id="demo-label">DEMO DATA</span></div>
+      <div id="tracking-content"></div>
+    </section>
+  </main>
+  <footer class="footer"><div class="container footer-inner"><strong>LAAM <span>EXPRESS</span></strong><span>Parcel &amp; document delivery</span><span>© 2026 LAAM Express · Student project</span></div></footer>
+</body>
+</html>
