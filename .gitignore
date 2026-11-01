@@ -4,3 +4,5 @@ node_modules/
 # Lock file
 package-lock.json
 !server/package-lock.json
+
+.env
