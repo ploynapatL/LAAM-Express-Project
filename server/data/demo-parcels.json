@@ -1,0 +1,64 @@
+{
+  "LAAM20260001": {
+    "trackingNumber": "LAAM20260001",
+    "currentStatus": "Sorting",
+    "latestLocation": "Bangkok Sorting Hub",
+    "updatedAt": "2026-10-31T09:45:00+07:00",
+    "serviceType": "Standard Delivery",
+    "origin": "Chiang Mai",
+    "destination": "Bangkok",
+    "history": [
+      {
+        "status": "Sorting",
+        "location": "Bangkok Sorting Hub",
+        "timestamp": "2026-10-31T09:45:00+07:00"
+      },
+      {
+        "status": "Received",
+        "location": "Chiang Mai Branch",
+        "timestamp": "2026-10-30T15:20:00+07:00"
+      },
+      {
+        "status": "Awaiting Handover",
+        "location": "Online order created",
+        "timestamp": "2026-10-30T10:26:00+07:00"
+      }
+    ]
+  },
+  "LAAM20260002": {
+    "trackingNumber": "LAAM20260002",
+    "currentStatus": "Out for Delivery",
+    "latestLocation": "Bangkok Delivery Station",
+    "updatedAt": "2026-10-31T08:10:00+07:00",
+    "serviceType": "Express Delivery",
+    "origin": "Ayutthaya",
+    "destination": "Bangkok",
+    "history": [
+      {
+        "status": "Out for Delivery",
+        "location": "Bangkok Delivery Station",
+        "timestamp": "2026-10-31T08:10:00+07:00"
+      },
+      {
+        "status": "Sorting",
+        "location": "Bangkok Sorting Hub",
+        "timestamp": "2026-10-31T03:20:00+07:00"
+      },
+      {
+        "status": "Received",
+        "location": "Ayutthaya Branch",
+        "timestamp": "2026-10-30T21:00:00+07:00"
+      }
+    ]
+  },
+  "LAAM20260003": {
+    "trackingNumber": "LAAM20260003",
+    "currentStatus": "Awaiting Handover",
+    "latestLocation": "Not yet received",
+    "updatedAt": "2026-10-31T10:10:00+07:00",
+    "serviceType": "Standard Delivery",
+    "origin": "Chonburi",
+    "destination": "Bangkok",
+    "history": []
+  }
+}
