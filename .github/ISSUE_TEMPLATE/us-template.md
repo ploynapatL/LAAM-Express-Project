@@ -15,8 +15,14 @@ assignees: ''
 [document what you know]
 
 ### Acceptance Criteria  
+
+### Implementation Tasks
+
+### Current Progress
+
+### Sprint Review Discussion
    
- ```gherkin
+ ```
 Given [some context]
 When [certain action is taken]
 Then [the outcome of action is observed]
