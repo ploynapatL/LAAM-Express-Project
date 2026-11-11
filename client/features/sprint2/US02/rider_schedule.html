@@ -1,0 +1,430 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <meta name="theme-color" content="#3d5a80" />
+
+  <title>Rider Schedule | LAAM Express</title>
+
+  <!-- US-02 stylesheet -->
+  <link rel="stylesheet" href="./css/styles.css" />
+  <script type="module" src="./js/main.js"></script>
+</head>
+
+<body>
+
+  <!-- ====================================
+       EMPLOYEE HEADER
+       ==================================== -->
+  <header class="rider-header">
+    <div class="header-inner">
+
+      <div class="brand">
+        <span>
+          LAAM <strong>EXPRESS</strong>
+        </span>
+        <small>RIDER PORTAL</small>
+      </div>
+
+      <!-- Return to existing homepage -->
+      <a
+        class="header-home"
+        href="../../../index.html"
+        aria-label="Return to LAAM Express homepage"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="m3 10 9-7 9 7" />
+          <path d="M5 9v12h14V9" />
+          <path d="M9 21v-8h6v8" />
+        </svg>
+        <span>Home</span>
+      </a>
+
+    </div>
+  </header>
+
+
+  <!-- ====================================
+       RIDER WORKSPACE
+       ==================================== -->
+  <main
+    class="rider-workspace"
+    id="rider-workspace"
+  >
+
+    <!-- ================================
+         PICKUP ASSIGNMENT — US-02
+         ================================ -->
+    <section
+      id="pickup-screen"
+      class="workspace-screen assignment-screen"
+      aria-labelledby="pickup-title"
+    >
+
+      <div class="screen-heading">
+        <span class="heading-icon pickup-icon"
+              aria-hidden="true">
+          📦
+        </span>
+
+        <div>
+          <p class="eyebrow">RIDER ASSIGNMENTS</p>
+          <h1 id="pickup-title">
+            Pickup Assignment
+          </h1>
+          <p>Your scheduled pickup tasks</p>
+        </div>
+      </div>
+
+      <!-- JavaScript will render pickup cards -->
+      <div
+        id="pickup-list"
+        class="assignment-list"
+        aria-live="polite"
+        aria-busy="false"
+      >
+        <div class="state-message">
+          <p>Loading pickup assignments...</p>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ================================
+         DELIVERY ASSIGNMENT — US-02
+         ================================ -->
+    <section
+      id="delivery-screen"
+      class="workspace-screen assignment-screen"
+      aria-labelledby="delivery-title"
+      hidden
+    >
+
+      <div class="screen-heading">
+        <span class="heading-icon delivery-icon"
+              aria-hidden="true">
+          🚚
+        </span>
+
+        <div>
+          <p class="eyebrow">RIDER ASSIGNMENTS</p>
+          <h1 id="delivery-title">
+            Delivery Assignment
+          </h1>
+          <p>Your scheduled delivery tasks</p>
+        </div>
+      </div>
+
+      <!-- JavaScript will render delivery cards -->
+      <div
+        id="delivery-list"
+        class="assignment-list"
+        aria-live="polite"
+        aria-busy="false"
+      >
+        <div class="state-message">
+          <p>Loading delivery assignments...</p>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ================================
+         ASSIGNMENT DETAIL
+         ================================ -->
+    <section
+      id="detail-screen"
+      class="workspace-screen detail-screen"
+      aria-labelledby="detail-title"
+      hidden
+    >
+
+      <div class="detail-heading">
+        <button
+          type="button"
+          id="back-to-assignments"
+          class="back-btn"
+          aria-label="Back to assignments"
+        >
+          ←
+        </button>
+
+        <h2 id="detail-title">
+          Assignment Detail
+        </h2>
+      </div>
+
+      <!-- No task selected initially -->
+      <div
+        id="detail-placeholder"
+        class="detail-placeholder"
+      >
+        <span aria-hidden="true">📋</span>
+        <h3>No assignment selected</h3>
+        <p>
+          Select an assignment to view its details.
+        </p>
+      </div>
+
+
+      <!-- Populated later by US-02 JavaScript -->
+      <div id="detail-content" hidden>
+
+        <!-- Selected task -->
+        <div class="detail-task-header">
+          <strong id="detail-task-id">—</strong>
+
+          <span
+            id="detail-status"
+            class="status-badge"
+          ></span>
+        </div>
+
+        <div class="detail-body">
+
+          <!-- Schedule -->
+          <div class="detail-group">
+            <h3>Scheduled Time</h3>
+
+            <div class="detail-value-box">
+              <p id="detail-date">—</p>
+              <p id="detail-time">—</p>
+            </div>
+          </div>
+
+          <!-- Location -->
+          <div class="detail-group">
+            <h3 id="detail-location-title">
+              Assignment Location
+            </h3>
+
+            <div class="detail-value-box">
+              <p id="detail-location">—</p>
+            </div>
+          </div>
+
+          <!-- Customer note -->
+          <div class="detail-group">
+            <h3>Note from Customer</h3>
+
+            <div class="detail-value-box">
+              <p id="detail-note">
+                No note provided.
+              </p>
+            </div>
+          </div>
+
+          <!--
+            US-03 Integration Point
+
+            Customer phone number will be
+            implemented in the US-03 branch.
+
+            US-02 will provide the task ID.
+          -->
+
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ================================
+         SETTINGS — COMING SOON
+         ================================ -->
+    <section
+      id="settings-screen"
+      class="workspace-screen settings-screen"
+      aria-labelledby="settings-title"
+      hidden
+    >
+
+      <div class="screen-heading">
+        <span class="heading-icon settings-icon"
+              aria-hidden="true">
+          ⚙️
+        </span>
+
+        <div>
+          <h1 id="settings-title">Settings</h1>
+        </div>
+      </div>
+
+      <div class="coming-soon-card">
+
+        <div class="coming-soon-icon"
+             aria-hidden="true">
+          ⚙️
+        </div>
+
+        <h2>Coming Soon</h2>
+
+        <p>
+          This feature is not available yet.
+          It will be added in a future update.
+        </p>
+
+        <button
+          type="button"
+          id="back-to-pickup"
+          class="primary-button"
+        >
+          Back to Assignments
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ====================================
+       EMPLOYEE BOTTOM NAVIGATION
+       PICKUP | DELIVERY | SETTINGS
+       ==================================== -->
+  <nav
+    class="bottom-navbar"
+    aria-label="Rider navigation"
+  >
+
+    <!-- Pickup -->
+    <button
+      type="button"
+      id="nav-pickup"
+      class="nav-item active"
+      aria-current="page"
+    >
+      <span class="nav-icon"
+            aria-hidden="true">📦</span>
+      <span>Pickup</span>
+    </button>
+
+
+    <!-- Delivery -->
+    <button
+      type="button"
+      id="nav-delivery"
+      class="nav-item"
+    >
+      <span class="nav-icon"
+            aria-hidden="true">🚚</span>
+      <span>Delivery</span>
+    </button>
+
+
+    <!-- Settings -->
+    <button
+      type="button"
+      id="nav-settings"
+      class="nav-item"
+    >
+      <span class="nav-icon"
+            aria-hidden="true">⚙</span>
+      <span>Settings</span>
+    </button>
+
+  </nav>
+
+
+  <!-- ====================================
+       TEMPORARY NAVIGATION CONTROLLER
+
+       For HTML/CSS testing only.
+       Will be moved into js/main.js later.
+       ==================================== -->
+  <!-- <script>
+    const screens = {
+      pickup: document.getElementById("pickup-screen"),
+      delivery: document.getElementById("delivery-screen"),
+      detail: document.getElementById("detail-screen"),
+      settings: document.getElementById("settings-screen")
+    };
+
+    const navButtons = {
+      pickup: document.getElementById("nav-pickup"),
+      delivery: document.getElementById("nav-delivery"),
+      settings: document.getElementById("nav-settings")
+    };
+
+    let currentView = "pickup";
+
+    
+    function updateLayout() {
+    // Only display the currently selected screen.
+    // This behavior applies to mobile AND desktop.
+        screens.pickup.hidden = currentView !== "pickup";
+        screens.delivery.hidden = currentView !== "delivery";
+        screens.detail.hidden = currentView !== "detail";
+        screens.settings.hidden = currentView !== "settings";
+    }
+
+
+    function changeView(view) {
+      currentView = view;
+
+      updateLayout();
+
+      // The detail screen belongs to the
+      // currently selected assignment type.
+      const activeNav =
+        view === "detail" ? "pickup" : view;
+
+      for (const [name, button] of
+        Object.entries(navButtons)) {
+
+        const active = name === activeNav;
+
+        button.classList.toggle("active", active);
+
+        if (active) {
+          button.setAttribute("aria-current", "page");
+        } else {
+          button.removeAttribute("aria-current");
+        }
+      }
+    }
+
+    navButtons.pickup.addEventListener("click", () => {
+      changeView("pickup");
+    });
+
+    navButtons.delivery.addEventListener("click", () => {
+      changeView("delivery");
+    });
+
+    navButtons.settings.addEventListener("click", () => {
+      changeView("settings");
+    });
+
+    document.getElementById("back-to-pickup")
+      .addEventListener("click", () => {
+        changeView("pickup");
+      });
+
+    document.getElementById("back-to-assignments")
+      .addEventListener("click", () => {
+        changeView("pickup");
+      });
+
+    window.addEventListener("resize", updateLayout);
+
+    // Set initial screen.
+    changeView("pickup");
+  </script> -->
+
+</body>
+</html>
