@@ -7,6 +7,13 @@
 // import { getMockAssignments } from "./mock_data.js";
 import { getAssignments } from "./schedule_api.js";
 
+/*
+ * SPRINT 2 — US-03
+ * Import customer contact retrieval.
+ */
+import { getCustomerContact } from "../../US03/js/contact_api.js";
+
+
 // ==========================================
 // 1. ELEMENT REFERENCES
 // ==========================================
@@ -72,11 +79,24 @@ function updateNavigation() {
   });
 }
 
+
 function changeView(view) {
+
+  // ======================================
+  // SPRINT 2 — US-03
+  // Clear customer contact when leaving
+  // the Assignment Detail screen.
+  // ======================================
+  if (currentView === "detail" && view !== "detail") {
+    resetCustomerContact();
+  }
+
   currentView = view;
   updateLayout();
   updateNavigation();
 }
+
+
 
 function openTaskDetails(taskId) {
   const task = assignments.find(
@@ -90,13 +110,26 @@ function openTaskDetails(taskId) {
   selectedTask = task;
   previousAssignmentView = task.type;
 
+  // US-02: Display assignment details
   renderTaskDetails(task);
   changeView("detail");
+
+  // ======================================
+  // SPRINT 2 — US-03
+  // Retrieve the customer's phone number
+  // for the selected task.
+  // ======================================
+  loadCustomerContact(task.taskId);
 }
 
+
+
+
 function backToAssignments() {
+  // US-03 cleanup is handled by changeView().
   changeView(previousAssignmentView);
 }
+
 
 // ==========================================
 // 4. HELPERS
@@ -299,6 +332,109 @@ function renderTaskDetails(task) {
   // US-03 will later use task.taskId to
   // retrieve authorized customer contact data.
 }
+
+
+/*
+ * ==========================================
+ * SPRINT 2 — US-03
+ * Customer Contact UI Controller
+ * ==========================================
+ */
+
+let contactRequestId = 0;
+
+const contactMessage =
+  document.getElementById("us03-contact-message");
+
+const contactContent =
+  document.getElementById("us03-contact-content");
+
+const phoneNumberElement =
+  document.getElementById("us03-phone-number");
+
+const callButton =
+  document.getElementById("us03-call-button");
+
+
+// Clear previous contact and invalidate
+// any outstanding contact request.
+function resetCustomerContact() {
+  contactRequestId += 1;
+
+  contactContent.hidden = true;
+  callButton.hidden = true;
+  callButton.removeAttribute("href");
+
+  phoneNumberElement.textContent = "—";
+
+  contactMessage.hidden = false;
+  contactMessage.className = "contact-message";
+  contactMessage.textContent =
+    "Customer contact information is not loaded yet.";
+}
+
+
+// Retrieve contact for the selected task.
+async function loadCustomerContact(taskId) {
+  resetCustomerContact();
+
+  const requestId = contactRequestId;
+
+  contactMessage.textContent =
+    "Loading customer contact...";
+
+  try {
+    const contact = await getCustomerContact(taskId);
+
+    // An old request must not update a new task.
+    if (requestId !== contactRequestId) {
+      return;
+    }
+
+    const phone = contact.phone.trim();
+
+    // Convert display format into a tel URI.
+    const dialNumber = phone.replace(
+      /[\s().-]/g,
+      ""
+    );
+
+    if (!/^\+?\d{6,15}$/.test(dialNumber)) {
+      throw new Error("Invalid customer phone number.");
+    }
+
+    phoneNumberElement.textContent = phone;
+    callButton.href = `tel:${dialNumber}`;
+
+    contactContent.hidden = false;
+    callButton.hidden = false;
+    contactMessage.hidden = true;
+
+  } catch (error) {
+    if (requestId !== contactRequestId) {
+      return;
+    }
+
+    console.error(
+      "US-03 contact retrieval failed:",
+      error
+    );
+
+    contactContent.hidden = true;
+    callButton.hidden = true;
+    callButton.removeAttribute("href");
+
+    phoneNumberElement.textContent = "—";
+
+    contactMessage.hidden = false;
+    contactMessage.className = "contact-message error";
+    contactMessage.textContent =
+      error.message || "Unable to load customer contact.";
+  }
+}
+
+/* END — SPRINT 2 / US-03 */
+
 
 // ==========================================
 // 7. NAVIGATION EVENT LISTENERS

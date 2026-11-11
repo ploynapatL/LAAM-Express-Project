@@ -6,3 +6,9 @@ package-lock.json
 !server/package-lock.json
 
 .env
+
+# ==========================================
+# Sprint 2 — Local development mock servers
+# ==========================================
+
+/server/mocks/US03/

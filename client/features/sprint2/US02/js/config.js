@@ -8,7 +8,7 @@
  */
 
 export const CONFIG = {
-  DATA_SOURCE: "mock-api",
+  DATA_SOURCE: "local", // "local" or "mock-api"
 
   API_BASE_URL: "http://127.0.0.1:3002",
 
