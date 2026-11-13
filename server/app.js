@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const { createDemoRepository } = require('./repositories/tracking-repository');
 
+// Temporary Intentionally references an undefined identifier
+const week13LintDemo = undefinedVariableForCITest;
+
 // Default rate limit settings : Code smells (2) Fix
 const DEFAULT_RATE_LIMIT = 60;
 const RATE_LIMIT_WINDOW_MS = 60_000;
