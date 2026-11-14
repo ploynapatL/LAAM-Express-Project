@@ -1,155 +1,159 @@
-# LAAM Express — Database
 
-## Overview
+# LAAM Express — Database Documentation
 
-This folder contains the PostgreSQL database implementation for the LAAM Express parcel delivery management system.
+## 1. Overview
 
-**Version:** 1.0  
-**Database:** PostgreSQL  
-**Status:** Initial implementation — SQL tests completed; web integration pending verification.
+LAAM Express is a parcel delivery management system using PostgreSQL.
 
-The database supports customer management, parcel tracking, pickup scheduling, delivery, payments, Cash on Delivery (COD), and promotional coupons.
+The database supports parcel tracking, pickup scheduling, delivery management, payments, Cash on Delivery (COD), and customer information.
 
-## 1. Database Structure
+## 2. Database Technology
 
-The database consists of 11 relational tables.
+- DBMS: PostgreSQL
+- Database: `laam_express_dev`
+- SQL files: `database/`
+- Database tables: 11
 
-| Table | Description |
+## 3. Database Tables
+
+| Table | Purpose |
 |---|---|
-| `customer` | Stores customer information. |
-| `orders` | Stores shipping orders and sender/receiver details. |
-| `parcel` | Stores parcel details and tracking numbers. |
-| `parcel_status_history` | Records parcel status updates. |
-| `pickup` | Stores pickup appointments and assigned riders. |
-| `delivery` | Stores delivery information and proof of delivery. |
-| `employee` | Stores employee information and roles. |
-| `branch` | Stores branch information. |
-| `payment` | Records order payments. |
-| `cod` | Stores Cash on Delivery transactions. |
-| `coupon` | Stores promotional coupons and discounts. |
+| customer | Stores customer information and customer types |
+| coupon | Stores discount codes and conditions |
+| branch | Stores branch and hub information |
+| employee | Stores employee roles and branch assignments |
+| orders | Stores shipping orders and service details |
+| parcel | Stores parcel information and tracking numbers |
+| parcel_status_history | Records parcel tracking history |
+| pickup | Stores pickup appointments and inspection results |
+| delivery | Stores delivery attempts and proof of delivery |
+| payment | Stores payment transactions |
+| cod | Stores Cash on Delivery transactions and settlement |
 
-Primary Keys (PK), Foreign Keys (FK), and selected constraints are implemented to maintain data integrity.
+## 4. Main Relationships
 
-## 2. Database Files
+- One customer can create many orders.
+- Each order is associated with at most one parcel through a UNIQUE foreign key.
+- One parcel can have multiple tracking history records.
+- One pickup appointment can be linked to multiple orders.
+- One parcel can have multiple delivery attempts.
+- One order can have multiple payments.
+- One order can have at most one COD record.
+- One coupon can be used by multiple orders.
+- Each employee can be assigned to a branch.
+
+## 5. Business Rules
+
+The database enforces several rules using primary keys, foreign keys, UNIQUE constraints, CHECK constraints, functions, and triggers.
+
+Examples:
+
+- Each parcel has a unique tracking number.
+- Shipping fees and payment amounts cannot be negative.
+- Chilled and Frozen parcels require Express service.
+- Parcel statuses must follow the defined workflow.
+- Status changes are recorded in parcel_status_history.
+- Successful delivery requires proof of delivery.
+- Pickup confirmation requires inspection validation.
+- COD settlement information is validated.
+- Failed deliveries trigger COD cancellation according to the implemented database logic.
+
+Some rules require application or scheduled-job support, including shipping fee calculation, 7-day unclaimed parcel handling, 2-business-day COD settlement deadlines, and customer-specific authorization.
+
+## 6. SQL Files
 
 | File | Purpose |
 |---|---|
-| `schema.sql` | Creates the database tables and relationships. |
-| `seed.sql` | Inserts sample data for testing. |
-| `queries.sql` | Contains SQL queries for testing and demonstration. |
+| schema.sql | Creates the database structure for a fresh installation |
+| seed.sql | Inserts sample data for development and demonstration |
+| queries.sql | Contains demonstration SQL queries |
+| access_control.sql | Defines PostgreSQL roles and database permissions |
+| tests.sql | Tests selected database integrity rules |
+| migrations/001_final_schema.sql | Upgrades the original development schema |
 
-## 3. Setup Instructions
-
-**Requirements:** PostgreSQL and the `psql` command-line tool.
-
-### Step 1 — Create a Database
-
-```bash
-createdb -U YOUR_USERNAME laam_express_dev
-```
-
-Skip this step if the database already exists.
-
-### Step 2 — Create Tables
+## 7. Fresh Database Setup
 
 Run from the project root:
 
 ```bash
-psql -U YOUR_USERNAME -d laam_express_dev -v ON_ERROR_STOP=1 -f database/schema.sql
+createdb -U YOUR_POSTGRES_USERNAME laam_express_new
+
+psql -X -v ON_ERROR_STOP=1 -U YOUR_POSTGRES_USERNAME -d laam_express_new -f database/schema.sql
+
+psql -X -v ON_ERROR_STOP=1 -U YOUR_POSTGRES_USERNAME -d laam_express_new -f database/seed.sql
+
+psql -X -v ON_ERROR_STOP=1 -U YOUR_POSTGRES_USERNAME -d laam_express_new -f database/access_control.sql
 ```
 
-### Step 3 — Insert Sample Data
+Replace YOUR_POSTGRES_USERNAME with your PostgreSQL username.
+
+Do not run the migration on a fresh database.
+
+## 8. Run Demonstration Queries
 
 ```bash
-psql -U YOUR_USERNAME -d laam_express_dev -v ON_ERROR_STOP=1 -f database/seed.sql
+psql -X -v ON_ERROR_STOP=1 -P pager=off -U YOUR_POSTGRES_USERNAME -d laam_express_new -f database/queries.sql
 ```
 
-Run the seed file once on a new, empty database to avoid duplicate sample data.
-
-### Step 4 — Run Test Queries
+## 9. Run Database Tests
 
 ```bash
-psql -U YOUR_USERNAME -d laam_express_dev -v ON_ERROR_STOP=1 -f database/queries.sql
+psql -X -v ON_ERROR_STOP=1 -P pager=off -U YOUR_POSTGRES_USERNAME -d laam_express_new -f database/tests.sql
 ```
 
-## 4. Verify Database
+The test suite contains 12 tests covering table existence, uniqueness, data integrity, parcel service rules, status workflow, delivery proof, COD settlement, foreign keys, and basic role permissions.
 
-Connect to PostgreSQL:
+Test changes are rolled back at the end.
+
+## 10. Migration
+
+The migration file upgrades an existing development database without dropping its tables.
+
+Before migration:
+
+1. Back up the existing database.
+2. Restore the backup into a separate test database.
+3. Test the migration on that restored copy.
+4. Compare data before and after migration.
+5. Apply the migration to the intended development database only after successful verification.
+
+Example backup:
 
 ```bash
-psql -U YOUR_USERNAME -d laam_express_dev
+pg_dump -U YOUR_POSTGRES_USERNAME -d laam_express_dev -F c -f database/backups/laam_express_dev_backup.dump
 ```
 
-List all tables:
+Example migration:
 
-```sql
-\dt
+```bash
+psql -X -v ON_ERROR_STOP=1 -U YOUR_POSTGRES_USERNAME -d laam_express_dev -f database/migrations/001_final_schema.sql
 ```
 
-View table structure:
+The migration must not be rerun after successful application.
 
-```sql
-\d parcel
-\d pickup
-```
+## 11. Security
 
-View sample data:
+PostgreSQL roles are defined for tracking, pickup scheduling, and finance operations.
 
-```sql
-SELECT * FROM customer;
-SELECT * FROM orders;
-SELECT * FROM parcel;
-SELECT * FROM pickup;
-```
+The access control script applies least-privilege permissions to selected tables and columns.
 
-Exit PostgreSQL:
+Customer-specific data access, employee authentication, and assignment-based authorization must also be enforced by the backend. The included roles do not independently implement per-customer row-level security.
 
-```sql
-\q
-```
+## 12. Verification
 
-## 5. Supported User Stories
+During development:
 
-The database is designed to support the following web application features:
+- Fresh database tests: 12/12 passed.
+- Migration on a restored development copy: committed successfully.
+- Migration on laam_express_dev: committed successfully.
+- Parcel count before and after migration: 3.
+- Database triggers were verified after migration.
 
-| User Story | Description | Main Tables |
-|---|---|---|
-| US-01 | Track parcel status and history. | `parcel`, `parcel_status_history` |
-| US-02 | View scheduled pickup appointments. | `pickup`, `employee`, `orders` |
-| US-03 | Access relevant customer contact details for pickup or delivery. | `orders`, `pickup`, `employee`, `delivery` |
+These results confirm the tested scenarios, not exhaustive production readiness.
 
-**Note:** The SQL queries have been tested locally. End-to-end integration with the web application's frontend and backend must be verified separately.
+## 13. Notes
 
-## 6. Testing
-
-Initial local testing includes:
-
-- Creating all 11 tables.
-- Inserting sample data.
-- Checking Foreign Key constraints.
-- Checking UNIQUE constraints.
-- Running JOIN queries.
-- Testing transactions using `BEGIN` and `ROLLBACK`.
-
-Additional validation, security testing, and business-rule enforcement will be addressed in future updates.
-
-## 7. Development Notes
-
-- `laam_express_dev` is used for local development and testing.
-- Avoid running setup scripts against an existing production database without reviewing their effects.
-- Changes to `schema.sql` do not automatically modify existing database tables.
-- Changes to `seed.sql` do not automatically update existing records.
-- Use appropriate migration scripts for future schema changes.
-- Database connection credentials must not be committed to GitHub.
-
-## 8. Version History
-
-### V1.0 — Initial Full Database
-
-- Implemented 11 PostgreSQL tables.
-- Defined primary and foreign key relationships.
-- Added sample data for database testing.
-- Added demonstration queries for selected user stories.
-- Completed initial integrity and transaction tests.
-
-**Planned V2:** Verify web integration, refine business-rule constraints, and improve database security.
+- Do not commit database backups or environment files.
+- Use parameterized queries in the backend.
+- Keep database credentials in environment variables.
+- Coordinate schema changes with the backend team.

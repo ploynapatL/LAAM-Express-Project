@@ -6,3 +6,10 @@ package-lock.json
 !server/package-lock.json
 
 .env
+database/backups/
+
+# macOS
+.DS_Store
+
+# Local database backups
+database/backups/
