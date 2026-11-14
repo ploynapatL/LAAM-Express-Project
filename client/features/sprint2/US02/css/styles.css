@@ -1,0 +1,815 @@
+
+/* ==========================================
+   LAAM EXPRESS — SPRINT 2 / US-02
+   Rider Pickup & Delivery Schedule
+
+   MOBILE-FIRST DESIGN
+   ========================================== */
+
+
+/* ==========================================
+   1. THEME & GLOBAL STYLES
+   ========================================== */
+
+:root {
+    --navy: #3d5a80;
+    --blue: #98c1d9;
+    --ice: #e0fbfc;
+    --coral: #ee6c4d;
+    --ink: #293241;
+    --muted: #697586;
+    --line: #dbe3e9;
+    --page: #f8fafb;
+    --white: #ffffff;
+
+    --success-bg: #e7f4eb;
+    --success-text: #287447;
+
+    --warning-bg: #fff1e8;
+    --warning-text: #ad4b31;
+
+    --radius: 14px;
+    --shadow: 0 5px 20px rgba(41, 50, 65, 0.06);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    color: var(--ink);
+    background: var(--page);
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--page);
+}
+
+button,
+a {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+button:focus-visible,
+a:focus-visible {
+    outline: 3px solid var(--blue);
+    outline-offset: 3px;
+}
+
+
+/* ==========================================
+   2. EMPLOYEE HEADER
+   ========================================== */
+
+.rider-header {
+    background: var(--navy);
+    color: var(--white);
+}
+
+.header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+
+    width: 100%;
+    max-width: 1400px;
+    min-height: 80px;
+
+    margin: 0 auto;
+    padding: 16px 20px;
+}
+
+.brand {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    font-size: 20px;
+    font-weight: 850;
+    line-height: 1;
+    letter-spacing: -0.5px;
+}
+
+.brand strong {
+    color: var(--coral);
+}
+
+.brand small {
+    font-size: 10px;
+    font-weight: 550;
+    letter-spacing: 1.3px;
+    color: #dce9f2;
+}
+
+/* Homepage navigation */
+
+.header-home {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    padding: 10px 15px;
+
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 10px;
+
+    color: var(--white);
+    font-size: 13px;
+    font-weight: 700;
+
+    transition: background 0.2s;
+}
+
+.header-home svg {
+    width: 19px;
+    height: 19px;
+}
+
+.header-home:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+
+/* ==========================================
+   3. RIDER WORKSPACE
+   ========================================== */
+
+.rider-workspace {
+    width: 100%;
+    max-width: 1400px;
+    min-height: calc(100vh - 150px);
+
+    margin: 0 auto;
+    padding: 26px 16px 110px;
+}
+
+.workspace-screen {
+    min-width: 0;
+    width: 100%;
+}
+
+
+/* ==========================================
+   4. SCREEN HEADINGS
+   ========================================== */
+
+.screen-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    margin-bottom: 25px;
+}
+
+.heading-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+
+    font-size: 26px;
+    border-radius: 12px;
+}
+
+.pickup-icon {
+    background: #fff0e9;
+}
+
+.delivery-icon {
+    background: #e6f4fa;
+}
+
+.settings-icon {
+    background: #e6edf5;
+}
+
+.eyebrow {
+    margin: 0;
+
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 1px;
+}
+
+.screen-heading h1 {
+    margin: 4px 0 5px;
+
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.screen-heading p:not(.eyebrow) {
+    margin: 0;
+
+    color: var(--muted);
+    font-size: 12px;
+}
+
+
+/* ==========================================
+   5. ASSIGNMENT LIST
+   ========================================== */
+
+.assignment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.assignment-card {
+    padding: 18px;
+
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.assignment-card:hover {
+    border-color: var(--blue);
+}
+
+.assignment-card:active {
+    transform: scale(0.99);
+}
+
+.assignment-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    margin-bottom: 14px;
+}
+
+.assignment-card h3 {
+    margin: 0;
+
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.assignment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.assignment-info p {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    margin: 0;
+
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.assignment-info strong {
+    color: var(--ink);
+}
+
+.assignment-card-footer {
+    display: flex;
+    justify-content: flex-end;
+
+    margin-top: 16px;
+}
+
+
+/* ==========================================
+   6. STATUS BADGES
+   ========================================== */
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 6px 11px;
+    border-radius: 20px;
+
+    background: var(--ice);
+    color: #245775;
+
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-scheduled {
+    background: var(--ice);
+    color: #245775;
+}
+
+.status-in-progress {
+    background: var(--warning-bg);
+    color: var(--warning-text);
+}
+
+.status-completed {
+    background: var(--success-bg);
+    color: var(--success-text);
+}
+
+.status-cancelled {
+    background: #f1f3f5;
+    color: #596675;
+}
+
+
+/* ==========================================
+   7. BUTTONS
+   ========================================== */
+
+.view-details-btn,
+.primary-button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+
+    padding: 11px 18px;
+
+    background: var(--navy);
+    color: var(--white);
+
+    border: none;
+    border-radius: 9px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    transition: background 0.2s;
+}
+
+.view-details-btn:hover,
+.primary-button:hover {
+    background: var(--ink);
+}
+
+/* Back button — Assignment Detail */
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+
+    background: var(--white);
+    color: var(--navy);
+
+    border: 1px solid var(--line);
+    border-radius: 10px;
+
+    font-size: 22px;
+    font-weight: 700;
+
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.back-btn:hover {
+    background: var(--ice);
+    color: var(--ink);
+}
+
+.back-btn:focus-visible {
+    outline: 3px solid var(--blue);
+    outline-offset: 3px;
+}
+
+
+/* ==========================================
+   8. ASSIGNMENT DETAILS
+   ========================================== */
+
+.detail-screen {
+    padding: 20px;
+
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+}
+
+.detail-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-bottom: 22px;
+}
+
+.detail-heading h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.detail-placeholder {
+    padding: 40px 16px;
+
+    text-align: center;
+    color: var(--muted);
+}
+
+.detail-placeholder > span {
+    display: block;
+    margin-bottom: 15px;
+
+    font-size: 40px;
+}
+
+.detail-placeholder h3 {
+    margin: 0 0 8px;
+
+    color: var(--ink);
+    font-size: 16px;
+}
+
+.detail-placeholder p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.detail-task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+
+    padding: 15px;
+    margin-bottom: 24px;
+
+    background: #eaf6fc;
+    border-radius: 12px;
+}
+
+.detail-task-header strong {
+    font-size: 15px;
+}
+
+.detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.detail-group h3 {
+    margin: 0 0 10px;
+
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.detail-value-box {
+    padding: 15px;
+
+    background: #f1f4f6;
+    border-radius: 10px;
+}
+
+.detail-value-box p {
+    margin: 0;
+
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.7;
+
+    overflow-wrap: anywhere;
+}
+
+.detail-value-box p + p {
+    margin-top: 7px;
+}
+
+
+/* ==========================================
+   9. SETTINGS / COMING SOON
+   ========================================== */
+
+.settings-screen {
+    width: 100%;
+    max-width: 600px;
+
+    margin: 0 auto;
+}
+
+.coming-soon-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+
+    padding: 45px 26px;
+
+    text-align: center;
+
+    background: var(--white);
+
+    border: 1px solid var(--line);
+    border-radius: 22px;
+
+    box-shadow: var(--shadow);
+}
+
+.coming-soon-icon {
+    margin-bottom: 4px;
+    font-size: 58px;
+}
+
+.coming-soon-card h2 {
+    margin: 0;
+
+    font-size: 25px;
+    font-weight: 850;
+}
+
+.coming-soon-card p {
+    max-width: 300px;
+    margin: 0 0 12px;
+
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.coming-soon-card .primary-button {
+    width: 100%;
+    max-width: 260px;
+}
+
+
+/* ==========================================
+   10. LOADING / EMPTY / ERROR STATES
+   ========================================== */
+
+.state-message {
+    padding: 45px 20px;
+
+    text-align: center;
+
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.state-message p {
+    margin: 0;
+}
+
+.state-error {
+    background: #fff4f1;
+    color: #a33c2c;
+    border-color: #efbaa9;
+}
+
+
+/* ==========================================
+   11. EMPLOYEE BOTTOM NAVIGATION
+
+   PICKUP | DELIVERY | SETTINGS
+   ========================================== */
+
+.bottom-navbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+
+    min-height: 70px;
+
+    padding: 8px 12px
+        max(8px, env(safe-area-inset-bottom));
+
+    background: var(--navy);
+    color: var(--white);
+
+    box-shadow:
+        0 -4px 18px rgba(41, 50, 65, 0.12);
+
+    z-index: 100;
+}
+
+.nav-item {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    min-height: 48px;
+    padding: 7px 8px;
+
+    background: transparent;
+    color: #dbe6f0;
+
+    border: none;
+    border-radius: 10px;
+
+    font-size: 11px;
+    font-weight: 650;
+
+    transition: color 0.2s;
+}
+
+.nav-icon {
+    font-size: 22px;
+    line-height: 1.2;
+}
+
+.nav-item:hover {
+    color: var(--white);
+}
+
+.nav-item.active {
+    color: var(--coral);
+}
+
+
+/* ==========================================
+   12. TABLET RESPONSIVENESS
+   ========================================== */
+
+@media (min-width: 600px) {
+
+    .header-inner {
+        padding: 20px 30px;
+    }
+
+    .rider-workspace {
+        padding: 30px 24px 115px;
+    }
+
+    .screen-heading h1 {
+        font-size: 26px;
+    }
+
+    .assignment-card {
+        padding: 22px;
+    }
+
+    .detail-screen {
+        padding: 28px;
+    }
+}
+
+
+/* ==========================================
+   13. DESKTOP RESPONSIVENESS
+
+   Original blueprint:
+   Pickup | Delivery | Assignment Detail
+   ========================================== */
+
+@media (min-width: 1024px) {
+
+    .rider-workspace {
+    display: block;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 35px 30px 110px;
+}
+
+#pickup-screen,
+#delivery-screen,
+#detail-screen {
+    width: 100%;
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+    .assignment-screen {
+        min-width: 0;
+    }
+
+    .screen-heading h1 {
+        font-size: 20px;
+    }
+
+    .heading-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 23px;
+    }
+
+    .detail-screen {
+        padding: 20px;
+    }
+
+    .settings-screen {
+        grid-column: 1 / -1;
+
+        width: 100%;
+        max-width: 600px;
+
+        margin: 0 auto;
+    }
+
+    .bottom-navbar {
+        min-height: 64px;
+    }
+
+    .nav-item {
+        flex-direction: row;
+        gap: 10px;
+
+        font-size: 13px;
+    }
+
+    .nav-icon {
+        font-size: 20px;
+    }
+
+    /* Assignment detail back button
+       is needed only for mobile 
+    #back-to-assignments {
+        display: none;
+    } */
+}
+
+
+/* ==========================================
+   14. SMALL MOBILE DEVICES
+   ========================================== */
+
+@media (max-width: 360px) {
+
+    .header-inner {
+        padding: 15px 12px;
+    }
+
+    .brand {
+        font-size: 17px;
+    }
+
+    .header-home {
+        padding: 9px 10px;
+        font-size: 12px;
+    }
+
+    .rider-workspace {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .screen-heading h1 {
+        font-size: 19px;
+    }
+
+    .assignment-card {
+        padding: 15px;
+    }
+
+    .detail-screen {
+        padding: 16px;
+    }
+
+    .nav-item {
+        font-size: 10px;
+    }
+}
