@@ -4,7 +4,8 @@
     "private": true,
     "scripts": {
         "start": "node index.js",
-        "test": "node --test"
+        "test": "node --test test/tracking.test.js",
+        "test:integration": "node --test test/us1-us3.integration.test.js"
     },
     "dependencies": {
         "cors": "^2.8.5",

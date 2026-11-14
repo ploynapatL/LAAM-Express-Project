@@ -1,5 +1,12 @@
 # US-01 / UC-02 — Tracking API contract (proposed)
 
+> Implementation update: PostgreSQL uses the exact states in `database/schema.sql`
+> (`Order Created`, `Picked Up`, `In Transit`, `Out for Delivery`, `Delivered`, `Failed`, `Returned`).
+> `serviceType` comes from `orders.service_type`; `origin` is null and `destination` is the zone label.
+> Tracking validation remains 4–64 characters for compatibility; stored numbers fit VARCHAR(50).
+> Seed examples are LAAM001, LAAM002 and LAAM003. Proposed states/examples below are historical.
+> See [US2-US3 contract](RIDER_API_CONTRACT.md) and [current setup](US1_US3_SETUP_TH.md).
+
 **Source:** Week 10 Assignment (Revise1), pp. 2–3 (UC-02) and pp. 12–13 (technical API plan); US Homework spreadsheet p. 1.
 
 ## Approved behavior from coursework

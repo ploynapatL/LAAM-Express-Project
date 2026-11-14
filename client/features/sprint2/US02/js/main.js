@@ -4,8 +4,8 @@
  * Rider Schedule Frontend Controller
  */
 
-// import { getMockAssignments } from "./mock_data.js";
 import { getAssignments } from "./schedule_api.js";
+import { setRiderToken } from "./rider_api.js";
 
 /*
  * SPRINT 2 — US-03
@@ -136,6 +136,7 @@ function backToAssignments() {
 // ==========================================
 
 function formatDate(dateString) {
+  if (!dateString) return "Schedule date not available";
   // Avoid UTC timezone shifts for YYYY-MM-DD.
   const [year, month, day] =
     dateString.split("-").map(Number);
@@ -149,12 +150,21 @@ function formatDate(dateString) {
   }).format(date);
 }
 
+function formatTaskTime(task) {
+  if (!task.startTime) return "Schedule time not available";
+  return task.endTime ? `${task.startTime} – ${task.endTime}` : task.startTime;
+}
+
 function statusClass(status) {
   const classes = {
     "Scheduled": "status-scheduled",
     "In Progress": "status-in-progress",
     "Completed": "status-completed",
-    "Cancelled": "status-cancelled"
+    "Cancelled": "status-cancelled",
+    "Successful": "status-completed",
+    "Delivered": "status-completed",
+    "In Transit": "status-in-progress",
+    "Failed": "status-cancelled"
   };
 
   return classes[status] || "status-scheduled";
@@ -217,13 +227,13 @@ function createAssignmentCard(task) {
   const timeLine = createElement(
     "p",
     "",
-    `🕒 ${task.startTime} – ${task.endTime}`
+    `🕒 ${formatTaskTime(task)}`
   );
 
   const addressLine = createElement(
     "p",
     "",
-    `📍 ${task.address}`
+    `📍 ${task.address || "Location not available"}`
   );
 
   info.append(dateLine, timeLine, addressLine);
@@ -255,8 +265,8 @@ function renderAssignments(type, container) {
   const filtered = assignments
     .filter(task => task.type === type)
     .sort((a, b) => {
-      const first = `${a.date}T${a.startTime}`;
-      const second = `${b.date}T${b.startTime}`;
+      const first = `${a.date || "9999-12-31"}T${a.startTime || ""}`;
+      const second = `${b.date || "9999-12-31"}T${b.startTime || ""}`;
       return first.localeCompare(second);
     });
 
@@ -311,7 +321,7 @@ function renderTaskDetails(task) {
   document.getElementById(
     "detail-time"
   ).textContent =
-    `${task.startTime} – ${task.endTime}`;
+    formatTaskTime(task);
 
   document.getElementById(
     "detail-location-title"
@@ -322,15 +332,14 @@ function renderTaskDetails(task) {
 
   document.getElementById(
     "detail-location"
-  ).textContent = task.address;
+  ).textContent = task.address || "Location not available";
 
   document.getElementById(
     "detail-note"
   ).textContent =
     task.note || "No note provided.";
 
-  // US-03 will later use task.taskId to
-  // retrieve authorized customer contact data.
+  // US3 retrieves contact separately after this assignment is selected.
 }
 
 
@@ -468,18 +477,29 @@ document.getElementById(
 // 8. INITIALIZE
 // ==========================================
 
+let assignmentRequestId = 0;
 async function initialize() {
+  const requestId = ++assignmentRequestId;
+  resetCustomerContact();
+  selectedTask = null;
+  assignments = [];
+  detailContent.hidden = true;
+  detailPlaceholder.hidden = false;
+  for (const list of [pickupList, deliveryList]) list.textContent = "Loading assignments...";
   changeView("pickup");
 
   pickupList.setAttribute("aria-busy", "true");
   deliveryList.setAttribute("aria-busy", "true");
 
   try {
-    assignments = await getAssignments();
+    const loaded = await getAssignments();
+    if (requestId !== assignmentRequestId) return;
+    assignments = loaded;
 
     renderAssignments("pickup", pickupList);
     renderAssignments("delivery", deliveryList);
   } catch (error) {
+    if (requestId !== assignmentRequestId) return;
     console.error("Could not load assignments:", error);
 
     for (const list of [pickupList, deliveryList]) {
@@ -489,14 +509,27 @@ async function initialize() {
         createElement(
           "p",
           "state-message state-error",
-          "Unable to load assignments."
+          error.message || "Unable to load assignments."
         )
       );
     }
   } finally {
+    if (requestId !== assignmentRequestId) return;
     pickupList.setAttribute("aria-busy", "false");
     deliveryList.setAttribute("aria-busy", "false");
   }
 }
 
+document.getElementById("rider-access-form").addEventListener("submit", event => {
+  event.preventDefault();
+  const input = document.getElementById("rider-token");
+  setRiderToken(input.value);
+  input.value = "";
+  initialize();
+});
+document.getElementById("rider-sign-out").addEventListener("click", () => {
+  setRiderToken("");
+  document.getElementById("rider-token").value = "";
+  initialize();
+});
 initialize();

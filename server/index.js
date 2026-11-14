@@ -5,6 +5,7 @@ const { createApp } = require("./app");
 const { createPostgresRepository } =
   require("./repositories/postgres-repositories");
 const pool = require("./config/db");
+const { parseRiderTokens } = require('./routes/riders');
 
 const allowedOrigins = process.env.FRONTEND_ORIGINS
   ? process.env.FRONTEND_ORIGINS
@@ -14,6 +15,7 @@ const allowedOrigins = process.env.FRONTEND_ORIGINS
   : undefined;
 
 async function startServer() {
+  const riderTokens = parseRiderTokens(process.env.RIDER_TOKENS_JSON);
   // Verify PostgreSQL is accessible before starting Express
   await pool.query("SELECT 1");
 
@@ -22,6 +24,7 @@ async function startServer() {
   // Inject PostgreSQL repository into Express
   const app = createApp({
     repository: createPostgresRepository(),
+    riderTokens,
     allowedOrigins
   });
 

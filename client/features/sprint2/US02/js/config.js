@@ -1,18 +1,5 @@
-
-/*
- * LAAM Express — US-02 Configuration
- *
- * DATA_SOURCE:
- * "local"    = Frontend mock-data.js
- * "mock-api" = Temporary Express server
- */
-
+// Real PostgreSQL API only; no automatic fallback to fictional data.
 export const CONFIG = {
-  DATA_SOURCE: "local", // "local" or "mock-api"
-
-  API_BASE_URL: "http://127.0.0.1:3002",
-
-  // For mock API testing only.
-  // Options: "pickup" or "delivery" or "unauthorized"
-  DEMO_RIDER: "pickup"
+  API_BASE_URL: "http://localhost:3001",
+  REQUEST_TIMEOUT_MS: 10000
 };

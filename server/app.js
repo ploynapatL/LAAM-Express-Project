@@ -1,14 +1,16 @@
 const express = require('express');
 const cors = require('cors');
-const { createDemoRepository } = require('./repositories/tracking-repository');
+const { createPostgresRepository } = require('./repositories/postgres-repositories');
+const { createRiderRouter } = require('./routes/riders');
 
-// The DB teammate can inject a repository with async findByTrackingNumber(no).
-function createApp({ repository = createDemoRepository(), rateLimit = 60, windowMs = 60000,
+// PostgreSQL by default; tests can explicitly inject a repository.
+function createApp({ repository = createPostgresRepository(), riderTokens = {}, rateLimit = 60, windowMs = 60000,
   allowedOrigins = ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:5500', 'http://127.0.0.1:5500'] } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(cors({ origin: allowedOrigins }));
   app.use(express.json({ limit: '16kb' }));
+  app.use('/api', createRiderRouter({ repository, riderTokens }));
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'laam-tracking', dataSource: repository.dataSource || 'custom' }));
   const items = [];
   app.get('/api/items', (_req, res) => res.json(items));
@@ -62,7 +64,7 @@ function createApp({ repository = createDemoRepository(), rateLimit = 60, window
     if (error instanceof URIError || error.type === 'entity.parse.failed') return res.status(400).json({ error: 'Invalid request' });
     if (error.type === 'entity.too.large') return res.status(413).json({ error: 'Request body too large' });
     console.error('API request failed:', error.message);
-    res.status(500).json({ error: 'Tracking service is temporarily unavailable' });
+    res.status(500).json({ error: 'Service is temporarily unavailable' });
   });
   return app;
 }

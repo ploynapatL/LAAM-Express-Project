@@ -1,0 +1,496 @@
+{
+  "info": {
+    "name": "LAAM Express US1-US3 - Real PostgreSQL",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Prepared, not executed. Requires fresh schema.sql + seed.sql and running PostgreSQL API. Set tokens locally; staffToken must map to seeded employee 3. Never use the old mock servers. Seed-dependent assertions are only for a fresh development DB."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001"
+    },
+    {
+      "key": "trackingNumber",
+      "value": "LAAM001"
+    },
+    {
+      "key": "pickupTaskId",
+      "value": "P-1-O-1"
+    },
+    {
+      "key": "deliveryTaskId",
+      "value": "D-1"
+    },
+    {
+      "key": "pickupToken",
+      "value": ""
+    },
+    {
+      "key": "deliveryToken",
+      "value": ""
+    },
+    {
+      "key": "staffToken",
+      "value": ""
+    },
+    {
+      "key": "invalidToken",
+      "value": "invalid-token"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health (liveness only)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"PostgreSQL source\", () => pm.expect(pm.response.json().dataSource).to.eql(\"postgresql\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US1 - seeded tracking",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/tracking/{{trackingNumber}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Public fields only\", () => { const d = pm.response.json(); pm.expect(d.history).to.be.an(\"array\"); [\"phone\", \"sender_phone\", \"receiver_phone\", \"employeeId\"].forEach(k => pm.expect(d).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US1 - missing tracking",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/tracking/UNKNOWN-POSTMAN"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US1 - invalid tracking",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/tracking/ab"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US2 - rider identity",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{pickupToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/riders/me"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US2 - assigned pickups",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{pickupToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/riders/me/pickups"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));",
+              "pm.test(\"Seed has per-order pickup tasks\", () => { const tasks = pm.response.json().assignments; pm.expect(tasks.map(t => t.taskId)).to.include(pm.collectionVariables.get(\"pickupTaskId\")); tasks.forEach(t => pm.expect(t).not.to.have.property(\"phone\")); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US2 - assigned deliveries (no invented appointment)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{deliveryToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/riders/me/deliveries"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));",
+              "pm.test(\"No delivery appointment in schema\", () => pm.response.json().assignments.forEach(t => { pm.expect(t.date).to.eql(null); pm.expect(t.startTime).to.eql(null); }));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US2 - other role tab empty",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{pickupToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/riders/me/deliveries"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));",
+              "pm.test(\"Empty tab\", () => pm.expect(pm.response.json().assignments).to.eql([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US2 - no token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/riders/me/pickups"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US2 - invalid token",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{invalidToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/riders/me/pickups"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US2 - non-rider rejected (configure staff token)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/riders/me/pickups"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US3 - pickup sender contact",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{pickupToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/tasks/{{pickupTaskId}}/contact"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));",
+              "pm.test(\"Sender phone\", () => pm.expect(pm.response.json()).to.eql({ taskId: pm.collectionVariables.get(\"pickupTaskId\"), phone: \"0811111111\" }));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US3 - delivery receiver contact",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{deliveryToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/tasks/{{deliveryTaskId}}/contact"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));",
+              "pm.test(\"Receiver phone\", () => pm.expect(pm.response.json().phone).to.eql(\"0822222222\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US3 - missing token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/tasks/{{pickupTaskId}}/contact"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US3 - wrong role",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{deliveryToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/tasks/{{pickupTaskId}}/contact"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US3 - forged pickup/order association",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{pickupToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/tasks/P-1-O-3/contact"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US3 - missing task",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{pickupToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/tasks/P-2147483647-O-2147483647/contact"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "US3 - invalid task ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{pickupToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/api/tasks/not-a-task/contact"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"JSON response\", () => pm.response.to.be.json);",
+              "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

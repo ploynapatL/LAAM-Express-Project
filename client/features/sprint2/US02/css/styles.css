@@ -961,3 +961,6 @@ a:focus-visible {
 
 /* END — SPRINT 2 / US-03 */
 
+
+.rider-access { max-width: 960px; margin: 1rem auto; padding: 1rem; }
+.rider-access input, .rider-access button { padding: .6rem; margin: .3rem; max-width: 100%; }

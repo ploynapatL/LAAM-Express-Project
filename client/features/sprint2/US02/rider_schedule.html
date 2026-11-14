@@ -55,6 +55,14 @@
   </header>
 
 
+  <form id="rider-access-form" class="rider-access">
+    <label for="rider-token">Rider access token</label>
+    <input id="rider-token" type="password" required autocomplete="off" spellcheck="false" />
+    <button type="submit">Load / Refresh assignments</button>
+    <button id="rider-sign-out" type="button">Clear access</button>
+    <p>Use the token issued by your administrator. Access is cleared when this page reloads.</p>
+  </form>
+
   <!-- ====================================
        RIDER WORKSPACE
        ==================================== -->
