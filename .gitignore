@@ -5,20 +5,14 @@ node_modules/
 package-lock.json
 !server/package-lock.json
 
+# Environment
 .env
-<<<<<<< HEAD
-database/backups/
 
 # macOS
 .DS_Store
 
 # Local database backups
 database/backups/
-=======
 
-# ==========================================
-# Sprint 2 — Local development mock servers
-# ==========================================
-
+# Sprint 2 local mock server
 /server/mocks/US03/
->>>>>>> origin/customerContactFeat_Frontend
