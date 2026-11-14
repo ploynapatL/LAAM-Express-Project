@@ -57,10 +57,10 @@
 
   <form id="rider-access-form" class="rider-access">
     <label for="rider-token">Rider access token</label>
-    <input id="rider-token" type="password" required autocomplete="off" spellcheck="false" />
+    <input id="rider-token" type="password" autocomplete="off" spellcheck="false" aria-describedby="rider-access-help" />
     <button type="submit">Load / Refresh assignments</button>
     <button id="rider-sign-out" type="button">Clear access</button>
-    <p>Use the token issued by your administrator. Access is cleared when this page reloads.</p>
+    <p id="rider-access-help">Enter your token to load assignments or switch rider. Leave blank to refresh with your current access. Clear access or reload this page to remove it.</p>
   </form>
 
   <!-- ====================================

@@ -58,6 +58,7 @@ GROUP BY
     e.employee_id,
     e.name,
     pu.pickup_id,
+    
     pu.appointment_date,
     pu.appointment_time,
     pu.pickup_location,

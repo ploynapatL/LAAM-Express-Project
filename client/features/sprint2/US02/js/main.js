@@ -523,7 +523,10 @@ async function initialize() {
 document.getElementById("rider-access-form").addEventListener("submit", event => {
   event.preventDefault();
   const input = document.getElementById("rider-token");
-  setRiderToken(input.value);
+  const newToken = input.value.trim();
+  // An empty field refreshes with the credential already held in memory.
+  // initialize() clears previous data and invalidates outstanding responses.
+  if (newToken) setRiderToken(newToken);
   input.value = "";
   initialize();
 });
