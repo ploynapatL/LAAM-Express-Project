@@ -6,6 +6,7 @@ package-lock.json
 !server/package-lock.json
 
 .env
+<<<<<<< HEAD
 database/backups/
 
 # macOS
@@ -13,3 +14,11 @@ database/backups/
 
 # Local database backups
 database/backups/
+=======
+
+# ==========================================
+# Sprint 2 — Local development mock servers
+# ==========================================
+
+/server/mocks/US03/
+>>>>>>> origin/customerContactFeat_Frontend

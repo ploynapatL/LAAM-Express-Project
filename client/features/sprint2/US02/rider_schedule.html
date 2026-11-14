@@ -227,14 +227,111 @@
             </div>
           </div>
 
-          <!--
-            US-03 Integration Point
+          
+<!-- ==========================================
+     SPRINT 2 — US-03
+     CUSTOMER CONTACT INFORMATION
 
-            Customer phone number will be
-            implemented in the US-03 branch.
+     Displays only the phone number of the
+     customer assigned to the selected task.
 
-            US-02 will provide the task ID.
-          -->
+     The phone number is retrieved by US-03.
+     ========================================== -->
+
+<div
+  class="detail-group customer-contact-group"
+  id="us03-contact-section"
+  aria-labelledby="us03-contact-title"
+>
+
+  <h3 id="us03-contact-title">
+    Customer Contact
+  </h3>
+
+  <!-- Initial state: contact not retrieved -->
+  <p
+    id="us03-contact-message"
+    class="contact-message"
+    role="status"
+    aria-live="polite"
+  >
+    Customer contact information is not loaded yet.
+  </p>
+
+  <!-- Hidden until contact retrieval succeeds -->
+  <div
+    id="us03-contact-content"
+    class="customer-contact-content"
+    hidden
+  >
+
+    <div class="customer-phone-box">
+
+      <span
+        class="customer-phone-icon"
+        aria-hidden="true"
+      >
+        &#9742;
+      </span>
+
+      <div class="customer-phone-information">
+
+        <strong id="us03-phone-number">
+          —
+        </strong>
+
+        <span>Customer phone number</span>
+
+      </div>
+
+      <!--
+        US-03:
+        The tel: URL will be assigned by
+        JavaScript only after authorization.
+      -->
+      <a
+        id="us03-call-button"
+        class="customer-call-button"
+        href="#"
+        aria-label="Call customer"
+        hidden
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="20"
+          height="20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path
+            d="M22 16.92v3a2 2 0 0 1-2.18 2
+               19.79 19.79 0 0 1-8.63-3.07
+               19.5 19.5 0 0 1-6-6
+               19.79 19.79 0 0 1-3.07-8.67
+               A2 2 0 0 1 4.11 2h3
+               a2 2 0 0 1 2 1.72
+               c.12.96.36 1.91.7 2.81
+               a2 2 0 0 1-.45 2.11L8.09 9.91
+               a16 16 0 0 0 6 6l1.27-1.27
+               a2 2 0 0 1 2.11-.45
+               c.9.34 1.85.58 2.81.7
+               A2 2 0 0 1 22 16.92z"
+          />
+        </svg>
+      </a>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- END OF US-03 CUSTOMER CONTACT SECTION -->
+
 
         </div>
       </div>
