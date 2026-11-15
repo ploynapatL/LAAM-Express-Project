@@ -11,6 +11,10 @@ function createApp({ repository = createPostgresRepository(), riderTokens = {}, 
   app.use(cors({ origin: allowedOrigins }));
   app.use(express.json({ limit: '16kb' }));
   app.use('/api', createRiderRouter({ repository, riderTokens }));
+  if (process.env.PLAYGROUND_ENABLED === 'true') {
+    const { playgroundRouter } = require('./playground/router');
+    app.use('/api/playground', playgroundRouter());
+  }
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'laam-tracking', dataSource: repository.dataSource || 'custom' }));
   const items = [];
   app.get('/api/items', (_req, res) => res.json(items));

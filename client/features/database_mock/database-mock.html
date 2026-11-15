@@ -1,587 +1,218 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LAAM Express - Database Mock</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      color: #111;
-    }
-
-    .container {
-      width: 700px;
-      max-width: 94%;
-      margin: 50px auto;
-    }
-
-    h1, h2 {
-      text-align: center;
-    }
-
-    .section {
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 20px;
-      margin-top: 20px;
-    }
-
-    .home-link {
-      display: inline-block;
-      color: #2962eb;
-      text-decoration: none;
-      font-size: 16px;
-      margin-bottom: 15px;
-    }
-
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 6px;
-      background: #2962eb;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .btn:disabled {
-      background: #999;
-      cursor: not-allowed;
-    }
-
-    .btn.selected {
-      background: #1742aa;
-    }
-
-    .back-btn {
-      background: #666;
-    }
-
-    label {
-      display: block;
-      font-weight: bold;
-      margin: 15px 0 6px;
-    }
-
-    select, input {
-      width: 100%;
-      padding: 10px;
-      font-size: 15px;
-      border: 1px solid #aaa;
-      border-radius: 4px;
-    }
-
-    pre {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      padding: 12px;
-      background: #eee;
-      border: 1px solid #ccc;
-      font-size: 13px;
-    }
-
-    .result {
-      padding: 12px;
-      border: 1px solid #ccc;
-      margin-top: 15px;
-    }
-
-    .allowed {
-      color: green;
-      font-weight: bold;
-    }
-
-    .denied {
-      color: red;
-      font-weight: bold;
-    }
-
-    .note {
-      color: #555;
-      font-size: 14px;
-    }
-
-    .hidden {
-      display: none;
-    }
-  </style>
-</head>
-
-<body>
-  <main class="container">
-    <h1>LAAM EXPRESS</h1>
-    <h2>Database Mock</h2>
-
-    <p class="note" style="text-align:center">
-      Database requirement and access control demonstration
-    </p>
-
-    <!-- Requirement Selection -->
-    <section class="section" id="requirement-list">
-      <a href="../../index.html" class="home-link">
-        &lt; Home 
-      </a>
-      <h3>Select Functional Requirement</h3>
-      <div id="requirement-buttons"></div>
-
-      <!-- <a href="/starter/starter/client/index.html">
-        <button class="btn back-btn" type="button">
-          Back to Central Room
-        </button>
-      </a> -->
-    </section>
-
-    <!-- Test Environment -->
-    <section class="section hidden" id="test-environment">
-      <button class="btn back-btn" id="back-to-list">
-        Back to Requirements
-      </button>
-
-      <h3 id="requirement-title"></h3>
-      <p id="requirement-description"></p>
-
-      <hr>
-
-      <h3>Database Test Environment</h3>
-
-      <label for="role-select">Select User / Role</label>
-      <select id="role-select">
-        <option value="customer-1">Customer A</option>
-        <option value="customer-2">Customer B</option>
-        <option value="counter">Counter Staff</option>
-        <option value="hub">Hub Staff</option>
-        <option value="rider">Delivery Rider</option>
-        <option value="service">Customer Service</option>
-        <option value="finance">Finance Staff</option>
-        <option value="manager">Manager</option>
-        <option value="admin">System Admin</option>
-      </select>
-
-      <label for="operation-select">Select Operation</label>
-      <select id="operation-select"></select>
-
-      <label for="record-select">Select Target Record</label>
-      <select id="record-select">
-        <option value="ORD-001">ORD-001 (Customer A)</option>
-        <option value="ORD-002">ORD-002 (Customer B)</option>
-      </select>
-
-      <button class="btn" id="run-test">
-        Run Test
-      </button>
-
-      <div class="result hidden" id="test-result">
-        <h3>Test Result</h3>
-        <p id="result-status"></p>
-        <p id="result-reason"></p>
-
-        <h4>Output</h4>
-        <pre id="result-output"></pre>
-      </div>
-    </section>
-
-    <!-- Traceability -->
-    <section class="section hidden" id="traceability">
-      <h3>Requirement Traceability</h3>
-
-      <p><strong>Functional Requirement:</strong>
-        <span id="trace-fr"></span>
-      </p>
-
-      <p><strong>Related Business Rule:</strong>
-        <span id="trace-br"></span>
-      </p>
-
-      <p><strong>ER Entity / Relationship:</strong>
-        <span id="trace-er"></span>
-      </p>
-
-      <p><strong>Table / Column / Constraint:</strong>
-        <span id="trace-table"></span>
-      </p>
-
-      <p class="note">
-        Detailed documentation will be maintained in GitHub Wiki.
-      </p>
-    </section>
-  </main>
-
-  <script>
-    /*
-      IMPORTANT:
-      All requirements and tests below are examples.
-
-      This is a FRONTEND SIMULATION.
-      It is NOT connected to PostgreSQL.
-
-      Later, replace the mockTest() function
-      with real backend API requests.
-    */
-
-    const requirements = [
-      {
-        id: "FR-01",
-        title: "View Shipping Order",
-        description: "Users can view shipping orders according to their access permissions.",
-        br: "Customer may access only their own order.",
-        er: "CUSTOMER (1) -> (M) ORDER",
-        table: "customer.customer_id, orders.customer_id (FK)",
-        operations: [
-          { id: "view-order", name: "View Shipping Order" }
-        ]
-      },
-      {
-        id: "FR-02",
-        title: "View Financial Records",
-        description: "Financial information is restricted to authorized employees.",
-        br: "Financial records require authorized access.",
-        er: "ORDER (1) -> (M) PAYMENT",
-        table: "payment.order_id (FK), payment.payment_amount",
-        operations: [
-          { id: "view-payment", name: "View Payment" },
-          { id: "view-cod", name: "View COD Record" }
-        ]
-      },
-      {
-        id: "FR-03",
-        title: "Update Parcel Status",
-        description: "Authorized employees can update parcel status.",
-        br: "Every status update must be logged.",
-        er: "PARCEL (1) -> (M) PARCEL_STATUS_HISTORY",
-        table: "parcel.current_status, parcel_status_history.status",
-        operations: [
-          { id: "view-status", name: "View Parcel Status" },
-          { id: "update-status", name: "Update Parcel Status" }
-        ]
-      },
-      {
-        id: "FR-04",
-        title: "Manage Pickup",
-        description: "Demonstration of pickup information access.",
-        br: "Pickup must be inspected before confirmation.",
-        er: "ORDER (1) -> (0..1) PICKUP",
-        table: "pickup.inspection_status, pickup.pickup_result",
-        operations: [
-          { id: "view-pickup", name: "View Pickup" }
-        ]
-      },
-      {
-        id: "FR-05",
-        title: "View Management Report",
-        description: "Management can view summarized operational reports.",
-        br: "Employee access depends on assigned roles.",
-        er: "ORDER / PARCEL / PAYMENT",
-        table: "Database views (to be implemented)",
-        operations: [
-          { id: "view-report", name: "View Report" }
-        ]
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>LAAM Express — Database Playground</title>
+    <style>
+      * {
+        box-sizing: border-box;
       }
-    ];
-
-    const mockOrders = {
-      "ORD-001": {
-        order_id: "ORD-001",
-        customer_id: "customer-1",
-        status: "Sorting",
-        shipping_fee: 60
-      },
-      "ORD-002": {
-        order_id: "ORD-002",
-        customer_id: "customer-2",
-        status: "Out for Delivery",
-        shipping_fee: 85
+      body {
+        font:
+          15px Arial,
+          sans-serif;
+        background: #f4f4f4;
+        margin: 0;
+        color: #222;
       }
-    };
-
-    let selectedRequirement = null;
-
-    const requirementButtons =
-      document.getElementById("requirement-buttons");
-
-    const requirementList =
-      document.getElementById("requirement-list");
-
-    const testEnvironment =
-      document.getElementById("test-environment");
-
-    const traceability =
-      document.getElementById("traceability");
-
-    const roleSelect =
-      document.getElementById("role-select");
-
-    const operationSelect =
-      document.getElementById("operation-select");
-
-    const recordSelect =
-      document.getElementById("record-select");
-
-    // Generate Requirement Buttons
-    requirements.forEach(requirement => {
-      const button = document.createElement("button");
-      button.className = "btn";
-      button.textContent =
-        requirement.id + ": " + requirement.title;
-
-      button.addEventListener("click", () => {
-        openRequirement(requirement);
-      });
-
-      requirementButtons.appendChild(button);
-    });
-
-    function openRequirement(requirement) {
-      selectedRequirement = requirement;
-
-      requirementList.classList.add("hidden");
-      testEnvironment.classList.remove("hidden");
-      traceability.classList.remove("hidden");
-
-      document.getElementById("requirement-title")
-        .textContent =
-          requirement.id + ": " + requirement.title;
-
-      document.getElementById("requirement-description")
-        .textContent = requirement.description;
-
-      operationSelect.innerHTML = "";
-
-      requirement.operations.forEach(operation => {
-        const option = document.createElement("option");
-        option.value = operation.id;
-        option.textContent = operation.name;
-        operationSelect.appendChild(option);
-      });
-
-      document.getElementById("trace-fr")
-        .textContent = requirement.id;
-
-      document.getElementById("trace-br")
-        .textContent = requirement.br;
-
-      document.getElementById("trace-er")
-        .textContent = requirement.er;
-
-      document.getElementById("trace-table")
-        .textContent = requirement.table;
-
-      document.getElementById("test-result")
-        .classList.add("hidden");
-    }
-
-    // Return to Requirement List
-    document.getElementById("back-to-list")
-      .addEventListener("click", () => {
-        testEnvironment.classList.add("hidden");
-        traceability.classList.add("hidden");
-        requirementList.classList.remove("hidden");
-      });
-
-    // Run Test
-    document.getElementById("run-test")
-      .addEventListener("click", () => {
-        const role = roleSelect.value;
-        const operation = operationSelect.value;
-        const recordId = recordSelect.value;
-
-        const response =
-          mockTest(role, operation, recordId);
-
-        displayResult(response);
-      });
-
-    // Mock Database Logic
-    function mockTest(role, operation, recordId) {
-      const order = mockOrders[recordId];
-
-      if (!order) {
-        return {
-          allowed: false,
-          reason: "Record not found.",
-          data: null
-        };
+      main {
+        max-width: 960px;
+        margin: 30px auto;
+        padding: 0 14px;
       }
-
-      // FR-01: Order Access
-      if (operation === "view-order") {
-        if (role.startsWith("customer")) {
-          if (order.customer_id !== role) {
-            return {
-              allowed: false,
-              reason: "Customer cannot access another customer's order.",
-              data: null
-            };
-          }
-
-          return {
-            allowed: true,
-            reason: "Order belongs to the selected customer.",
-            data: order
-          };
-        }
-
-        if (["counter", "service", "admin"].includes(role)) {
-          return {
-            allowed: true,
-            reason: "Employee role is authorized to view orders.",
-            data: order
-          };
-        }
-
-        return {
-          allowed: false,
-          reason: "Selected role has no permission to view orders.",
-          data: null
-        };
+      h1,
+      h2 {
+        text-align: center;
       }
-
-      // FR-02: Financial Access
-      if (
-        operation === "view-payment" ||
-        operation === "view-cod"
-      ) {
-        if (["finance", "admin", "manager"].includes(role)) {
-          return {
-            allowed: true,
-            reason: "Role can access financial records.",
-            data: {
-              order_id: recordId,
-              payment_amount: 150,
-              payment_status: "Paid"
-            }
-          };
-        }
-
-        return {
-          allowed: false,
-          reason: "Financial records require authorized access.",
-          data: null
-        };
+      h1 {
+        margin-bottom: 5px;
       }
-
-      // FR-03: Parcel Status
-      if (operation === "view-status") {
-        return {
-          allowed: true,
-          reason: "Parcel status is available for viewing.",
-          data: {
-            order_id: recordId,
-            current_status: order.status
-          }
-        };
+      h2 {
+        margin-top: 5px;
       }
-
-      if (operation === "update-status") {
-        if (["hub", "rider", "admin"].includes(role)) {
-          return {
-            allowed: true,
-            reason: "Role is permitted to update parcel status.",
-            data: {
-              order_id: recordId,
-              old_status: order.status,
-              new_status: "Updated (Simulation)",
-              history_logged: true
-            }
-          };
-        }
-
-        return {
-          allowed: false,
-          reason: "Role does not have UPDATE permission.",
-          data: null
-        };
+      section {
+        background: white;
+        border: 1px solid #ddd;
+        padding: 16px;
+        margin: 14px 0;
+        border-radius: 5px;
       }
-
-      // FR-04: Pickup
-      if (operation === "view-pickup") {
-        if (["rider", "counter", "admin"].includes(role)) {
-          return {
-            allowed: true,
-            reason: "Role can view pickup information.",
-            data: {
-              order_id: recordId,
-              inspection_status: "Completed",
-              pickup_result: "Successful"
-            }
-          };
-        }
-
-        return {
-          allowed: false,
-          reason: "Role is not authorized to view pickup data.",
-          data: null
-        };
+      button {
+        cursor: pointer;
+        border: 0;
+        background: #2962eb;
+        color: white;
+        border-radius: 5px;
+        padding: 11px;
+        font-size: 14px;
       }
-
-      // FR-05: Management Report
-      if (operation === "view-report") {
-        if (["manager", "admin"].includes(role)) {
-          return {
-            allowed: true,
-            reason: "Role can view summarized reports.",
-            data: {
-              total_orders: 120,
-              delivered_parcels: 95,
-              pending_parcels: 25
-            }
-          };
-        }
-
-        return {
-          allowed: false,
-          reason: "Only management roles can access this report.",
-          data: null
-        };
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
       }
-
-      return {
-        allowed: false,
-        reason: "Unknown operation.",
-        data: null
-      };
-    }
-
-    function displayResult(response) {
-      const resultBox =
-        document.getElementById("test-result");
-
-      const status =
-        document.getElementById("result-status");
-
-      const reason =
-        document.getElementById("result-reason");
-
-      const output =
-        document.getElementById("result-output");
-
-      resultBox.classList.remove("hidden");
-
-      if (response.allowed) {
-        status.textContent = "ALLOWED";
-        status.className = "allowed";
-      } else {
-        status.textContent = "DENIED";
-        status.className = "denied";
+      button.secondary {
+        background: #555;
       }
-
-      reason.textContent = response.reason;
-
-      output.textContent =
-        JSON.stringify(response.data, null, 2);
-    }
-  </script>
-</body>
+      button.selected {
+        background: #133d9c;
+      }
+      a {
+        color: #2458c9;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      nav {
+        margin-bottom: 12px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 8px;
+      }
+      .grid button {
+        text-align: left;
+        width: 100%;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      label {
+        display: block;
+        font-weight: bold;
+        margin: 12px 0 6px;
+      }
+      input {
+        font-size: 14px;
+        padding: 10px;
+        width: 100%;
+        max-width: 480px;
+        border: 1px solid #aaa;
+        border-radius: 4px;
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        background: #f2f2f2;
+        border: 1px solid #ddd;
+        padding: 12px;
+        max-height: 420px;
+        overflow: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th,
+      td {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+      }
+      small,
+      .muted {
+        color: #666;
+      }
+      .hidden {
+        display: none;
+      }
+      .pass {
+        color: #12713b;
+      }
+      .fail {
+        color: #bd2525;
+      }
+      .warn {
+        color: #996000;
+      }
+      .test {
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+      }
+      .test button {
+        margin-left: 5px;
+      }
+      .tag {
+        font-size: 11px;
+        background: #eee;
+        padding: 3px 6px;
+        border-radius: 3px;
+      }
+      .status {
+        font-weight: bold;
+      }
+      .banner {
+        background: #fff7e0;
+        border: 1px solid #e0c487;
+        padding: 9px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>LAAM EXPRESS</h1>
+      <h2>Database Playground</h2>
+      <section>
+        <nav><a href="../../index.html">&lt; Home</a></nav>
+        <div class="banner">
+          LOCAL TEST ENVIRONMENT — Real PostgreSQL execution only when the
+          backend and demo token are configured. All test transactions are
+          rolled back. Do not use a production database.
+        </div>
+        <label for="token">Playground access token (local session only)</label
+        ><input
+          id="token"
+          type="password"
+          autocomplete="off"
+          placeholder="Enter PLAYGROUND_TOKEN from server/.env"
+        /><label for="base">Backend API URL</label
+        ><input id="base" value="http://localhost:3001" spellcheck="false" />
+        <div class="row" style="margin-top: 12px">
+          <button id="connect">Connect & Load Requirements</button
+          ><span id="connection" aria-live="polite">Not connected</span>
+        </div>
+      </section>
+      <section id="listSection">
+        <h3>Select Functional Requirement</h3>
+        <div id="reqList" class="grid"></div>
+      </section>
+      <section id="detail" class="hidden">
+        <button class="secondary" id="back">&lt; Requirements</button>
+        <h3 id="title"></h3>
+        <p><b>Related Business Rules:</b> <span id="br"></span></p>
+        <h4>Use Case</h4>
+        <p><b>Actor:</b> <span id="actor"></span></p>
+        <p id="useCase"></p>
+        <button id="runUseCase">Run Primary Use Case Check</button>
+        <p class="muted">
+          The use case is an explanatory workflow. Tests below execute fixed
+          database scenarios through the backend; these are not automatically
+          full UI authentication tests.
+        </p>
+        <h4>Test Cases</h4>
+        <div id="tests"></div>
+        <h4>Execution Result & Evidence</h4>
+        <div id="outcome" aria-live="polite">No test executed.</div>
+        <pre id="result">
+Click Run next to a test to obtain actual PostgreSQL evidence.</pre
+        >
+      </section>
+      <section>
+        <h4>General Database Tests</h4>
+        <div id="general"></div>
+        <p class="muted">
+          TC-02 is retained with limited evidence. TC-02A independently proves
+          tracking uniqueness. TC-25 explicitly reports missing COD deadline
+          enforcement.
+        </p>
+      </section>
+    </main>
+    <script src="./js/playground.js"></script>
+  </body>
 </html>
