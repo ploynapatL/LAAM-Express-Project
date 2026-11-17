@@ -1,10 +1,12 @@
+
 {
     "name": "cbe205-week9-api",
     "version": "1.0.0",
     "private": true,
     "scripts": {
         "start": "node index.js",
-        "test": "node --test",
+        "test": "node --test test/tracking.test.js",
+        "test:integration": "node --test test/us1-us3.integration.test.js",
         "lint": "eslint ."
     },
     "dependencies": {

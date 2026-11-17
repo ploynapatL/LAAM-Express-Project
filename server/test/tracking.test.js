@@ -1,9 +1,11 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { createApp } = require('../app');
+const { createDemoRepository } = require('../repositories/tracking-repository');
 
 async function serve(t, options) {
-  const server = createApp(options).listen(0, '127.0.0.1');
+  // Explicit unit-test fixture only; the application default is PostgreSQL.
+  const server = createApp({ repository: createDemoRepository(), ...options }).listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   t.after(() => new Promise(resolve => server.close(resolve)));
   return (path, init) => fetch(`http://127.0.0.1:${server.address().port}${path}`, init);
@@ -59,7 +61,7 @@ test('repository errors return safe JSON', async t => {
   const request = await serve(t, { repository: { async findByTrackingNumber() { throw new Error('DB unavailable'); } } });
   const response = await request('/api/tracking/TEST123');
   assert.equal(response.status, 500);
-  assert.deepEqual(await response.json(), { error: 'Tracking service is temporarily unavailable' });
+  assert.deepEqual(await response.json(), { error: 'Service is temporarily unavailable' });
 });
 test('approved CORS origin, read-only tracking, health, and starter endpoints', async t => {
   const request = await serve(t);
