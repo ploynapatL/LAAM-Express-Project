@@ -17,5 +17,5 @@ database/backups/
 # Sprint 2 local mock server
 /server/mocks/US03/
 
-playground-backups/
+.playground-backups/
 client/features/database_mock/database-mock-before-rollback.html
