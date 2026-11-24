@@ -1,4 +1,4 @@
-const api = "http://localhost:3001";
+import { API_BASE_URL as api } from '../../config/environment.js';
 const health = document.querySelector("#health");
 const list = document.querySelector("#items");
 const error = document.querySelector("#error");
