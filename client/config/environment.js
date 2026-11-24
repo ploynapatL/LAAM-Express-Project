@@ -4,7 +4,7 @@
 const LOCAL_API_URL = 'http://localhost:3001';
 
 // Replace with the actual Render Backend URL before deployment.
-const PRODUCTION_API_URL = '';
+const PRODUCTION_API_URL = 'https://laam-express-backend-vabz.onrender.com';
 
 const isLocal = [
   'localhost',
