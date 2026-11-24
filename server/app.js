@@ -57,6 +57,13 @@ function createApp({
 } = {}) {
   const app = express();
 
+  // Configure trusted proxy hops for cloud deployment
+const proxyHops = Number(process.env.TRUST_PROXY_HOPS || 0);
+
+if (Number.isInteger(proxyHops) && proxyHops > 0) {
+  app.set('trust proxy', proxyHops);
+}
+
   app.disable('x-powered-by');
   app.use(cors({ origin: allowedOrigins }));
   app.use(express.json({ limit: '16kb' }));

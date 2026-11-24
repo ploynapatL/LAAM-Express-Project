@@ -28,10 +28,11 @@ async function startServer() {
     allowedOrigins
   });
 
-  const port = process.env.PORT || 3001;
+  const port = Number(process.env.PORT || 3001);
+  const host = "0.0.0.0";
 
-  app.listen(port, () => {
-    console.log(`Tracking API running at http://localhost:${port}`);
+  app.listen(port, host, () => {
+  console.log(`Tracking API listening on ${host}:${port}`);
   });
 }
 
