@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#3d5a80">
+  <title>Account | LAAM Express</title>
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script type="module" src="/assets/js/sign-in.js"></script>
+</head>
+<body class="auth-page">
+  <header class="auth-header">
+    <a class="auth-brand" href="/"><span>LE</span> LAAM Express</a>
+    <a href="/">Track Parcel</a>
+  </header>
+  <main class="auth-layout">
+    <section class="auth-intro">
+      <div class="auth-decoration" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="auth-intro-content">
+        <h1 id="auth-heading"></h1>
+        <p id="auth-caption">Track your parcels and manage your shipments in one place.</p>
+      </div>
+    </section>
+    <section class="auth-panel" id="login-panel" aria-labelledby="login-heading" hidden>
+      <span class="auth-mark" aria-hidden="true">LE</span>
+      <h2 id="login-heading">Hello!</h2>
+      <p>Sign in to your LAAM Express account.</p>
+      <form id="login-form" class="account-form">
+        <label>Username or email <input name="identifier" autocomplete="username" maxlength="255" required></label>
+        <label>Password
+          <span class="password-input">
+            <input name="password" type="password" autocomplete="current-password" maxlength="128" required>
+            <button type="button" id="toggle-password" aria-pressed="false">Show</button>
+          </span>
+        </label>
+        <p class="account-error" role="alert" hidden></p>
+        <button type="submit" class="site-primary">Sign in <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="auth-switch">New to LAAM Express? <a href="/register">Register now</a></p>
+    </section>
+    <section class="auth-panel" id="register-panel" aria-labelledby="register-heading" hidden>
+      <span class="auth-mark" aria-hidden="true">LE</span>
+      <p class="auth-step" id="auth-step">Step 1 of 2</p>
+      <h2 id="register-heading" tabindex="-1">Create your account</h2>
+      <form id="register-details" class="account-form">
+        <label>Username <input name="username" autocomplete="username" minlength="3" maxlength="40" pattern="[A-Za-z0-9_.\-]{3,40}" title="Use 3–40 letters, numbers, underscores, periods or hyphens." required></label>
+        <label>Email address <input name="email" type="email" autocomplete="email" maxlength="255" required></label>
+        <label>Phone number <input name="phone" type="tel" autocomplete="tel" minlength="7" maxlength="20" required></label>
+        <button type="submit" class="site-primary">Continue <span aria-hidden="true">→</span></button>
+      </form>
+      <form id="register-password" class="account-form" hidden>
+        <label>Password <input name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label>
+        <label>Confirm password <input name="confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label>
+        <p class="field-note">Use at least 8 characters.</p>
+        <p class="account-error" role="alert" hidden></p>
+        <button type="submit" class="site-primary">Create account</button>
+        <button type="button" class="text-button" id="register-back">Back to account details</button>
+      </form>
+      <p class="auth-switch">Already have an account? <a href="/login">Sign in</a></p>
+    </section>
+  </main>
+  <footer class="auth-footer">LAAM Express · Connecting Every Delivery</footer>
+  <dialog class="account-dialog" id="registered" aria-labelledby="registered-title">
+    <form method="dialog">
+      <h2 id="registered-title">Your account has been created!</h2>
+      <p>You can now sign in to LAAM Express.</p>
+      <button type="submit" class="site-primary" autofocus>OK</button>
+    </form>
+  </dialog>
+</body>
+</html>

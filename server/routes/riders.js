@@ -1,8 +1,7 @@
 const express = require('express');
 const { timingSafeEqual } = require('node:crypto');
 
-// Temporary server-managed credentials: identity is never accepted from a request ID.
-// Replace with the team's login/session provider when its contract is agreed.
+// Optional Bearer credentials for existing API clients. Website riders use sessions.
 function parseRiderTokens(value) {
   if (!value) return {};
   let tokens;
@@ -16,22 +15,25 @@ function parseRiderTokens(value) {
   return tokens;
 }
 
-function createRiderRouter({ repository, riderTokens }) {
+function createRiderRouter({ repository, riderTokens, sessionAccount }) {
   const router = express.Router();
   const roles = { pickup: 'Pickup Rider', delivery: 'Delivery Rider' };
   const credentials = Object.entries(riderTokens).map(([token, id]) => [Buffer.from(token), id]);
   async function authenticate(req, res, next) {
     res.set('Cache-Control', 'no-store');
     res.vary('Authorization');
-    const match = /^Bearer ([^\s]+)$/i.exec(req.get('Authorization') || '');
+    res.vary('Cookie');
+    const authorization = req.get('Authorization');
+    const match = /^Bearer ([^\s]+)$/i.exec(authorization || '');
     const supplied = Buffer.from(match?.[1] || '');
     const credential = credentials.find(([token]) => token.length === supplied.length && timingSafeEqual(token, supplied));
-    if (!match || !credential) {
-      res.set('WWW-Authenticate', 'Bearer');
-      return res.status(401).json({ error: 'Authentication required' });
-    }
     try {
-      const employee = await repository.findEmployee(credential[1]);
+      const account = authorization ? null : await sessionAccount(req);
+      if (!credential && !account) {
+        res.set('WWW-Authenticate', 'Bearer');
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      const employee = credential ? await repository.findEmployee(credential[1]) : account;
       if (!employee || !Object.values(roles).includes(employee.role)) {
         return res.status(403).json({ error: 'Rider access required' });
       }

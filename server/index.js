@@ -18,6 +18,12 @@ async function startServer() {
   const riderTokens = parseRiderTokens(process.env.RIDER_TOKENS_JSON);
   // Verify PostgreSQL is accessible before starting Express
   await pool.query("SELECT 1");
+  const { rows: [tables] } = await pool.query(
+    "SELECT to_regclass('web_account') AS account, to_regclass('web_session') AS session"
+  );
+  if (!tables.account || !tables.session) {
+    throw new Error('Run database/migrations/002_accounts.sql before starting LAAM Express.');
+  }
 
   console.log("PostgreSQL connected successfully!");
 
@@ -29,10 +35,12 @@ async function startServer() {
   });
 
   const port = Number(process.env.PORT || 3001);
-  const host = "0.0.0.0";
+  const host = process.env.HOST || (process.env.RENDER || process.env.NODE_ENV === 'production'
+    ? "0.0.0.0"
+    : "127.0.0.1");
 
   app.listen(port, host, () => {
-  console.log(`Tracking API listening on ${host}:${port}`);
+    console.log(`LAAM Express is available at http://localhost:${port}`);
   });
 }
 

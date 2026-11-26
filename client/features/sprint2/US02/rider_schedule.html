@@ -12,8 +12,9 @@
   <title>Rider Schedule | LAAM Express</title>
 
   <!-- US-02 stylesheet -->
-  <link rel="stylesheet" href="./css/styles.css" />
-  <script type="module" src="./js/main.js"></script>
+  <link rel="stylesheet" href="/features/sprint2/US02/css/styles.css" />
+  <script type="module" src="/features/sprint2/US02/js/main.js"></script>
+  <link rel="stylesheet" href="/assets/css/site.css" />
 </head>
 
 <body>
@@ -34,7 +35,7 @@
       <!-- Return to existing homepage -->
       <a
         class="header-home"
-        href="../../../index.html"
+        href="/"
         aria-label="Return to LAAM Express homepage"
       >
         <svg
@@ -55,13 +56,7 @@
   </header>
 
 
-  <form id="rider-access-form" class="rider-access">
-    <label for="rider-token">Rider access token</label>
-    <input id="rider-token" type="password" autocomplete="off" spellcheck="false" aria-describedby="rider-access-help" />
-    <button type="submit">Load / Refresh assignments</button>
-    <button id="rider-sign-out" type="button">Clear access</button>
-    <p id="rider-access-help">Enter your token to load assignments or switch rider. Leave blank to refresh with your current access. Clear access or reload this page to remove it.</p>
-  </form>
+
 
   <!-- ====================================
        RIDER WORKSPACE
@@ -348,7 +343,7 @@
 
 
     <!-- ================================
-         SETTINGS — COMING SOON
+         SETTINGS
          ================================ -->
     <section
       id="settings-screen"
@@ -368,30 +363,15 @@
         </div>
       </div>
 
-      <div class="coming-soon-card">
-
-        <div class="coming-soon-icon"
-             aria-hidden="true">
-          ⚙️
-        </div>
-
-        <h2>Coming Soon</h2>
-
-        <p>
-          This feature is not available yet.
-          It will be added in a future update.
-        </p>
-
-        <button
-          type="button"
-          id="back-to-pickup"
-          class="primary-button"
-        >
-          Back to Assignments
-        </button>
-
+      <div class="profile-card" id="rider-profile">
+        <h2>My account</h2>
+        <strong data-account-name></strong>
+        <p data-account-email></p>
+        <p data-account-role></p>
+        <button type="button" class="site-secondary" data-open-password>Change password</button>
+        <button type="button" class="site-primary" data-logout>Log out</button>
+        <p role="alert" data-account-error hidden></p>
       </div>
-
     </section>
 
   </main>
@@ -444,92 +424,6 @@
 
   </nav>
 
-
-  <!-- ====================================
-       TEMPORARY NAVIGATION CONTROLLER
-
-       For HTML/CSS testing only.
-       Will be moved into js/main.js later.
-       ==================================== -->
-  <!-- <script>
-    const screens = {
-      pickup: document.getElementById("pickup-screen"),
-      delivery: document.getElementById("delivery-screen"),
-      detail: document.getElementById("detail-screen"),
-      settings: document.getElementById("settings-screen")
-    };
-
-    const navButtons = {
-      pickup: document.getElementById("nav-pickup"),
-      delivery: document.getElementById("nav-delivery"),
-      settings: document.getElementById("nav-settings")
-    };
-
-    let currentView = "pickup";
-
-    
-    function updateLayout() {
-    // Only display the currently selected screen.
-    // This behavior applies to mobile AND desktop.
-        screens.pickup.hidden = currentView !== "pickup";
-        screens.delivery.hidden = currentView !== "delivery";
-        screens.detail.hidden = currentView !== "detail";
-        screens.settings.hidden = currentView !== "settings";
-    }
-
-
-    function changeView(view) {
-      currentView = view;
-
-      updateLayout();
-
-      // The detail screen belongs to the
-      // currently selected assignment type.
-      const activeNav =
-        view === "detail" ? "pickup" : view;
-
-      for (const [name, button] of
-        Object.entries(navButtons)) {
-
-        const active = name === activeNav;
-
-        button.classList.toggle("active", active);
-
-        if (active) {
-          button.setAttribute("aria-current", "page");
-        } else {
-          button.removeAttribute("aria-current");
-        }
-      }
-    }
-
-    navButtons.pickup.addEventListener("click", () => {
-      changeView("pickup");
-    });
-
-    navButtons.delivery.addEventListener("click", () => {
-      changeView("delivery");
-    });
-
-    navButtons.settings.addEventListener("click", () => {
-      changeView("settings");
-    });
-
-    document.getElementById("back-to-pickup")
-      .addEventListener("click", () => {
-        changeView("pickup");
-      });
-
-    document.getElementById("back-to-assignments")
-      .addEventListener("click", () => {
-        changeView("pickup");
-      });
-
-    window.addEventListener("resize", updateLayout);
-
-    // Set initial screen.
-    changeView("pickup");
-  </script> -->
 
 </body>
 </html>

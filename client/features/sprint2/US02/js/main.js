@@ -5,7 +5,7 @@
  */
 
 import { getAssignments } from "./schedule_api.js";
-import { setRiderToken } from "./rider_api.js";
+import { getAccount, mountAccount } from "/assets/js/account.js";
 
 /*
  * SPRINT 2 — US-03
@@ -462,12 +462,6 @@ navButtons.settings.addEventListener("click", () => {
 });
 
 document.getElementById(
-  "back-to-pickup"
-).addEventListener("click", () => {
-  changeView("pickup");
-});
-
-document.getElementById(
   "back-to-assignments"
 ).addEventListener("click", () => {
   backToAssignments();
@@ -478,7 +472,7 @@ document.getElementById(
 // ==========================================
 
 let assignmentRequestId = 0;
-async function initialize() {
+async function initialize(initialView) {
   const requestId = ++assignmentRequestId;
   resetCustomerContact();
   selectedTask = null;
@@ -486,7 +480,7 @@ async function initialize() {
   detailContent.hidden = true;
   detailPlaceholder.hidden = false;
   for (const list of [pickupList, deliveryList]) list.textContent = "Loading assignments...";
-  changeView("pickup");
+  changeView(initialView);
 
   pickupList.setAttribute("aria-busy", "true");
   deliveryList.setAttribute("aria-busy", "true");
@@ -520,19 +514,16 @@ async function initialize() {
   }
 }
 
-document.getElementById("rider-access-form").addEventListener("submit", event => {
-  event.preventDefault();
-  const input = document.getElementById("rider-token");
-  const newToken = input.value.trim();
-  // An empty field refreshes with the credential already held in memory.
-  // initialize() clears previous data and invalidates outstanding responses.
-  if (newToken) setRiderToken(newToken);
-  input.value = "";
-  initialize();
-});
-document.getElementById("rider-sign-out").addEventListener("click", () => {
-  setRiderToken("");
-  document.getElementById("rider-token").value = "";
-  initialize();
-});
-initialize();
+try {
+  const account = await getAccount();
+  if (account?.type !== "rider") {
+    location.replace(account ? "/" : "/login");
+  } else {
+    mountAccount(account, { profile: document.getElementById("rider-profile") });
+    if (account.role === "Delivery Rider") navButtons.pickup.hidden = true;
+    else navButtons.delivery.hidden = true;
+    await initialize(account.role === "Delivery Rider" ? "delivery" : "pickup");
+  }
+} catch (error) {
+  for (const list of [pickupList, deliveryList]) list.textContent = error.message;
+}
