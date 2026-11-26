@@ -1,9 +1,13 @@
 
 const express = require('express');
 const cors = require('cors');
+const path = require('node:path');
 const { createPostgresRepository } = require('./repositories/postgres-repositories');
+const { createAccounts } = require('./repositories/accounts');
+const { createAccountRouter, RIDER_ROLES } = require('./routes/accounts');
 const { createRiderRouter } = require('./routes/riders');
 
+const client = path.resolve(__dirname, '../client');
 // Default rate limit settings
 // Week 13 Refactoring: Replace Magic Numbers with Named Constants
 const DEFAULT_RATE_LIMIT = 60;
@@ -45,6 +49,7 @@ function formatTrackingResponse(parcel) {
 // PostgreSQL by default; tests can explicitly inject a repository.
 function createApp({
   repository = createPostgresRepository(),
+  accounts = createAccounts(),
   riderTokens = {},
   rateLimit = DEFAULT_RATE_LIMIT,
   windowMs = RATE_LIMIT_WINDOW_MS,
@@ -68,7 +73,9 @@ if (Number.isInteger(proxyHops) && proxyHops > 0) {
   app.use(cors({ origin: allowedOrigins }));
   app.use(express.json({ limit: '16kb' }));
 
-  app.use('/api', createRiderRouter({ repository, riderTokens }));
+  const { router, sessionAccount } = createAccountRouter(accounts);
+  app.use('/api', router);
+  app.use('/api', createRiderRouter({ repository, riderTokens, sessionAccount }));
 
   app.get('/api/health', (_req, res) => res.json({
     status: 'ok',
@@ -155,6 +162,21 @@ if (Number.isInteger(proxyHops) && proxyHops > 0) {
     }
   });
 
+  app.get(['/login', '/register'], (_req, res) => res.sendFile(path.join(client, 'account.html')));
+  app.get('/features/sprint1/sprint1.html', (req, res) => {
+    const query = req.url.indexOf('?');
+    res.redirect(query === -1 ? '/' : '/' + req.url.slice(query));
+  });
+  app.get(['/rider', '/features/sprint2/US02/rider_schedule.html'], async (req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+      const account = await sessionAccount(req);
+      if (!account) return res.redirect('/login');
+      if (!RIDER_ROLES.includes(account.role)) return res.redirect('/');
+      res.sendFile(path.join(client, 'features/sprint2/US02/rider_schedule.html'));
+    } catch (error) { next(error); }
+  });
+  app.use(express.static(client));
   app.use((_req, res) => res.status(404).json({
     error: 'Endpoint not found'
   }));

@@ -1,538 +1,168 @@
-
-/*
- * LAAM Express — Sprint 2 / US-02
- * Rider Schedule Frontend Controller
- */
-
-import { getAssignments } from "./schedule_api.js";
-import { setRiderToken } from "./rider_api.js";
-
-/*
- * SPRINT 2 — US-03
- * Import customer contact retrieval.
- */
+import { getAccount, mountAccount } from "/assets/js/account.js";
 import { getCustomerContact } from "../../US03/js/contact_api.js";
+import { riderRequest } from "./rider_api.js";
 
+const byId = id => document.getElementById(id);
+const screens = { route: byId("route-screen"), detail: byId("detail-screen"), settings: byId("settings-screen") };
+const nav = { route: byId("nav-route"), settings: byId("nav-settings") };
+const routeList = byId("route-list");
+const routeMessage = byId("route-message");
+const contactMessage = byId("contact-message");
+const contactContent = byId("contact-content");
+const call = byId("call-customer");
+const dateFormat = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" });
+const taskLabels = { pickup: "Pickup", delivery: "Delivery" };
 
-// ==========================================
-// 1. ELEMENT REFERENCES
-// ==========================================
+let currentView = "route";
+let openedFrom;
+let contactRequest = 0;
 
-const screens = {
-  pickup: document.getElementById("pickup-screen"),
-  delivery: document.getElementById("delivery-screen"),
-  detail: document.getElementById("detail-screen"),
-  settings: document.getElementById("settings-screen")
-};
-
-const navButtons = {
-  pickup: document.getElementById("nav-pickup"),
-  delivery: document.getElementById("nav-delivery"),
-  settings: document.getElementById("nav-settings")
-};
-
-const pickupList = document.getElementById("pickup-list");
-const deliveryList = document.getElementById("delivery-list");
-
-const detailPlaceholder =
-  document.getElementById("detail-placeholder");
-
-const detailContent =
-  document.getElementById("detail-content");
-
-// ==========================================
-// 2. APPLICATION STATE
-// ==========================================
-
-let assignments = [];
-let currentView = "pickup";
-let previousAssignmentView = "pickup";
-let selectedTask = null;
-
-// ==========================================
-// 3. SCREEN NAVIGATION
-// ==========================================
-
-function updateLayout() {
-  // One screen at a time on all device sizes.
-  Object.entries(screens).forEach(([name, screen]) => {
-    screen.hidden = name !== currentView;
-  });
+function formatDate(date) {
+  return dateFormat.format(new Date(date + "T00:00:00Z"));
 }
 
-function updateNavigation() {
-  const activeView =
-    currentView === "detail"
-      ? previousAssignmentView
-      : currentView;
-
-  Object.entries(navButtons).forEach(([name, button]) => {
-    const active = name === activeView;
-
-    button.classList.toggle("active", active);
-
-    if (active) {
-      button.setAttribute("aria-current", "page");
-    } else {
-      button.removeAttribute("aria-current");
-    }
-  });
+function element(tag, className, text) {
+  const node = document.createElement(tag);
+  node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
 }
 
-
-function changeView(view) {
-
-  // ======================================
-  // SPRINT 2 — US-03
-  // Clear customer contact when leaving
-  // the Assignment Detail screen.
-  // ======================================
-  if (currentView === "detail" && view !== "detail") {
-    resetCustomerContact();
-  }
-
-  currentView = view;
-  updateLayout();
-  updateNavigation();
-}
-
-
-
-function openTaskDetails(taskId) {
-  const task = assignments.find(
-    item => item.taskId === taskId
-  );
-
-  if (!task) {
-    return;
-  }
-
-  selectedTask = task;
-  previousAssignmentView = task.type;
-
-  // US-02: Display assignment details
-  renderTaskDetails(task);
-  changeView("detail");
-
-  // ======================================
-  // SPRINT 2 — US-03
-  // Retrieve the customer's phone number
-  // for the selected task.
-  // ======================================
-  loadCustomerContact(task.taskId);
-}
-
-
-
-
-function backToAssignments() {
-  // US-03 cleanup is handled by changeView().
-  changeView(previousAssignmentView);
-}
-
-
-// ==========================================
-// 4. HELPERS
-// ==========================================
-
-function formatDate(dateString) {
-  if (!dateString) return "Schedule date not available";
-  // Avoid UTC timezone shifts for YYYY-MM-DD.
-  const [year, month, day] =
-    dateString.split("-").map(Number);
-
-  const date = new Date(year, month - 1, day);
-
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-  }).format(date);
-}
-
-function formatTaskTime(task) {
-  if (!task.startTime) return "Schedule time not available";
-  return task.endTime ? `${task.startTime} – ${task.endTime}` : task.startTime;
-}
-
-function statusClass(status) {
-  const classes = {
-    "Scheduled": "status-scheduled",
-    "In Progress": "status-in-progress",
-    "Completed": "status-completed",
-    "Cancelled": "status-cancelled",
+function badgeClass(status) {
+  const styles = {
+    "In Transit": "status-in-progress",
     "Successful": "status-completed",
     "Delivered": "status-completed",
-    "In Transit": "status-in-progress",
-    "Failed": "status-cancelled"
+    "Failed": "status-cancelled",
+    "Cancelled": "status-cancelled",
+    "Returned": "status-cancelled"
   };
-
-  return classes[status] || "status-scheduled";
+  return `status-badge ${styles[status] || "status-scheduled"}`;
 }
 
-function createElement(tag, className, text) {
-  const element = document.createElement(tag);
-
-  if (className) {
-    element.className = className;
+function changeView(view, focus) {
+  if (currentView === "detail" && view !== "detail") resetContact();
+  currentView = view;
+  for (const [name, screen] of Object.entries(screens)) screen.hidden = name !== view;
+  const active = view === "detail" ? "route" : view;
+  for (const [name, button] of Object.entries(nav)) {
+    button.classList.toggle("active", name === active);
+    if (name === active) button.setAttribute("aria-current", "page");
+    else button.removeAttribute("aria-current");
   }
-
-  if (text !== undefined) {
-    element.textContent = text;
-  }
-
-  return element;
+  focus.focus();
 }
 
-// ==========================================
-// 5. RENDER ASSIGNMENT CARDS
-// ==========================================
+function resetContact() {
+  contactRequest += 1;
+  contactContent.hidden = true;
+  call.removeAttribute("href");
+  byId("customer-phone").textContent = "";
+  contactMessage.hidden = false;
+  contactMessage.className = "contact-message";
+  contactMessage.textContent = "Loading customer contact…";
+}
 
-function createAssignmentCard(task) {
-  const card = createElement(
-    "article",
-    "assignment-card"
-  );
+async function loadContact(taskId) {
+  resetContact();
+  const request = contactRequest;
+  try {
+    const { phone } = await getCustomerContact(taskId);
+    if (request !== contactRequest) return;
+    const number = phone.trim().replace(/[\s().-]/g, "");
+    if (!/^\+?\d{6,15}$/.test(number)) throw new Error("Invalid customer phone number.");
+    byId("customer-phone").textContent = phone;
+    call.href = `tel:${number}`;
+    contactContent.hidden = false;
+    contactMessage.hidden = true;
+  } catch (error) {
+    if (request !== contactRequest) return;
+    contactMessage.classList.add("error");
+    contactMessage.textContent = error.message;
+  }
+}
 
-  const header = createElement(
-    "div",
-    "assignment-card-header"
-  );
+function openDetails(task, stop, button) {
+  openedFrom = button;
+  const type = taskLabels[task.type];
+  byId("detail-title").textContent = `${type} details`;
+  byId("detail-task-id").textContent = task.taskId;
+  const status = byId("detail-status");
+  status.className = badgeClass(task.status);
+  status.textContent = task.status;
+  byId("detail-location-title").textContent = `${type} location`;
+  byId("detail-location").textContent = task.address?.trim() || stop.location || "Location not available";
+  byId("detail-appointment").hidden = !task.date;
+  byId("detail-time").textContent = task.date
+    ? [formatDate(task.date), task.startTime].filter(Boolean).join(" · ")
+    : "";
+  changeView("detail", byId("detail-title"));
+  loadContact(task.taskId);
+}
 
-  const title = createElement(
-    "h3",
-    "",
-    task.taskId
-  );
+function renderTask(task, stop) {
+  const row = element("li", "route-task");
+  const name = element("div", "route-task-name");
+  const type = taskLabels[task.type];
+  name.append(element("span", `task-type task-${task.type}`, type), element("strong", "", task.taskId));
+  if (task.date) {
+    const date = task.date !== stop.routeDate ? formatDate(task.date) : "";
+    const appointment = [date, task.startTime].filter(Boolean).join(" · ");
+    if (appointment) name.append(element("span", "task-time", appointment));
+  }
+  const button = element("button", "view-details-btn", "View details");
+  button.type = "button";
+  button.setAttribute("aria-label", `View details for ${type.toLowerCase()} ${task.taskId}`);
+  button.addEventListener("click", () => openDetails(task, stop, button));
+  row.append(name, element("span", badgeClass(task.status), task.status), button);
+  return row;
+}
 
-  const badge = createElement(
-    "span",
-    `status-badge ${statusClass(task.status)}`,
-    task.status
-  );
-
-  header.append(title, badge);
-
-  const info = createElement(
-    "div",
-    "assignment-info"
-  );
-
-  const dateLine = createElement(
-    "p",
-    "",
-    `📅 ${formatDate(task.date)}`
-  );
-
-  const timeLine = createElement(
-    "p",
-    "",
-    `🕒 ${formatTaskTime(task)}`
-  );
-
-  const addressLine = createElement(
-    "p",
-    "",
-    `📍 ${task.address || "Location not available"}`
-  );
-
-  info.append(dateLine, timeLine, addressLine);
-
-  const footer = createElement(
-    "div",
-    "assignment-card-footer"
-  );
-
-  const detailButton = createElement(
-    "button",
-    "view-details-btn",
-    "View Details →"
-  );
-
-  detailButton.type = "button";
-  detailButton.addEventListener("click", () => {
-    openTaskDetails(task.taskId);
-  });
-
-  footer.appendChild(detailButton);
-
-  card.append(header, info, footer);
-
+function renderStop(stop) {
+  const card = element("article", "route-stop");
+  const header = element("header", "stop-header");
+  const title = stop.location || "Location not available";
+  header.append(element("h3", "", stop.stopOrder ? `${stop.stopOrder}. ${title}` : title));
+  const pickups = stop.tasks.filter(task => task.type === "pickup").length;
+  const deliveries = stop.tasks.length - pickups;
+  header.append(element("p", "stop-counts", `${pickups} pickup · ${deliveries} delivery`));
+  const tasks = element("ul", "stop-tasks");
+  tasks.append(...stop.tasks.map(task => renderTask(task, stop)));
+  card.append(header, tasks);
   return card;
 }
 
-function renderAssignments(type, container) {
-  const filtered = assignments
-    .filter(task => task.type === type)
-    .sort((a, b) => {
-      const first = `${a.date || "9999-12-31"}T${a.startTime || ""}`;
-      const second = `${b.date || "9999-12-31"}T${b.startTime || ""}`;
-      return first.localeCompare(second);
-    });
-
-  container.replaceChildren();
-
-  if (filtered.length === 0) {
-    const message = createElement(
-      "div",
-      "state-message"
-    );
-
-    message.appendChild(
-      createElement(
-        "p",
-        "",
-        `No ${type} assignments scheduled.`
-      )
-    );
-
-    container.appendChild(message);
-    return;
+function renderRoute(stops) {
+  const days = new Map();
+  for (const stop of stops) {
+    if (!days.has(stop.routeDate)) {
+      const day = element("section", "route-day");
+      day.append(element("h2", "", stop.routeDate ? formatDate(stop.routeDate) : "Unscheduled stops"));
+      days.set(stop.routeDate, day);
+    }
+    days.get(stop.routeDate).append(renderStop(stop));
   }
-
-  filtered.forEach(task => {
-    container.appendChild(createAssignmentCard(task));
-  });
+  routeList.replaceChildren(...days.values());
+  routeMessage.textContent = stops.length ? "" : "No assignments yet.";
+  routeMessage.hidden = stops.length > 0;
 }
 
-// ==========================================
-// 6. RENDER ASSIGNMENT DETAILS
-// ==========================================
+nav.route.addEventListener("click", () => changeView("route", byId("route-title")));
+nav.settings.addEventListener("click", () => changeView("settings", byId("settings-title")));
+byId("back-to-assignments").addEventListener("click", () => changeView("route", openedFrom));
 
-function renderTaskDetails(task) {
-  detailPlaceholder.hidden = true;
-  detailContent.hidden = false;
-
-  document.getElementById(
-    "detail-task-id"
-  ).textContent = task.taskId;
-
-  const statusElement =
-    document.getElementById("detail-status");
-
-  statusElement.textContent = task.status;
-  statusElement.className =
-    `status-badge ${statusClass(task.status)}`;
-
-  document.getElementById(
-    "detail-date"
-  ).textContent = formatDate(task.date);
-
-  document.getElementById(
-    "detail-time"
-  ).textContent =
-    formatTaskTime(task);
-
-  document.getElementById(
-    "detail-location-title"
-  ).textContent =
-    task.type === "pickup"
-      ? "Pickup Location"
-      : "Delivery Location";
-
-  document.getElementById(
-    "detail-location"
-  ).textContent = task.address || "Location not available";
-
-  document.getElementById(
-    "detail-note"
-  ).textContent =
-    task.note || "No note provided.";
-
-  // US3 retrieves contact separately after this assignment is selected.
-}
-
-
-/*
- * ==========================================
- * SPRINT 2 — US-03
- * Customer Contact UI Controller
- * ==========================================
- */
-
-let contactRequestId = 0;
-
-const contactMessage =
-  document.getElementById("us03-contact-message");
-
-const contactContent =
-  document.getElementById("us03-contact-content");
-
-const phoneNumberElement =
-  document.getElementById("us03-phone-number");
-
-const callButton =
-  document.getElementById("us03-call-button");
-
-
-// Clear previous contact and invalidate
-// any outstanding contact request.
-function resetCustomerContact() {
-  contactRequestId += 1;
-
-  contactContent.hidden = true;
-  callButton.hidden = true;
-  callButton.removeAttribute("href");
-
-  phoneNumberElement.textContent = "—";
-
-  contactMessage.hidden = false;
-  contactMessage.className = "contact-message";
-  contactMessage.textContent =
-    "Customer contact information is not loaded yet.";
-}
-
-
-// Retrieve contact for the selected task.
-async function loadCustomerContact(taskId) {
-  resetCustomerContact();
-
-  const requestId = contactRequestId;
-
-  contactMessage.textContent =
-    "Loading customer contact...";
-
-  try {
-    const contact = await getCustomerContact(taskId);
-
-    // An old request must not update a new task.
-    if (requestId !== contactRequestId) {
-      return;
-    }
-
-    const phone = contact.phone.trim();
-
-    // Convert display format into a tel URI.
-    const dialNumber = phone.replace(
-      /[\s().-]/g,
-      ""
-    );
-
-    if (!/^\+?\d{6,15}$/.test(dialNumber)) {
-      throw new Error("Invalid customer phone number.");
-    }
-
-    phoneNumberElement.textContent = phone;
-    callButton.href = `tel:${dialNumber}`;
-
-    contactContent.hidden = false;
-    callButton.hidden = false;
-    contactMessage.hidden = true;
-
-  } catch (error) {
-    if (requestId !== contactRequestId) {
-      return;
-    }
-
-    console.error(
-      "US-03 contact retrieval failed:",
-      error
-    );
-
-    contactContent.hidden = true;
-    callButton.hidden = true;
-    callButton.removeAttribute("href");
-
-    phoneNumberElement.textContent = "—";
-
-    contactMessage.hidden = false;
-    contactMessage.className = "contact-message error";
-    contactMessage.textContent =
-      error.message || "Unable to load customer contact.";
+try {
+  const account = await getAccount();
+  if (account?.type !== "rider") {
+    location.replace(account ? "/" : "/login");
+  } else {
+    mountAccount(account, { profile: byId("rider-profile") });
+    const { stops } = await riderRequest("/api/riders/me/route");
+    renderRoute(stops);
   }
+} catch (error) {
+  routeMessage.classList.add("state-error");
+  routeMessage.textContent = error.message;
+} finally {
+  routeList.setAttribute("aria-busy", "false");
 }
-
-/* END — SPRINT 2 / US-03 */
-
-
-// ==========================================
-// 7. NAVIGATION EVENT LISTENERS
-// ==========================================
-
-navButtons.pickup.addEventListener("click", () => {
-  changeView("pickup");
-});
-
-navButtons.delivery.addEventListener("click", () => {
-  changeView("delivery");
-});
-
-navButtons.settings.addEventListener("click", () => {
-  changeView("settings");
-});
-
-document.getElementById(
-  "back-to-pickup"
-).addEventListener("click", () => {
-  changeView("pickup");
-});
-
-document.getElementById(
-  "back-to-assignments"
-).addEventListener("click", () => {
-  backToAssignments();
-});
-
-// ==========================================
-// 8. INITIALIZE
-// ==========================================
-
-let assignmentRequestId = 0;
-async function initialize() {
-  const requestId = ++assignmentRequestId;
-  resetCustomerContact();
-  selectedTask = null;
-  assignments = [];
-  detailContent.hidden = true;
-  detailPlaceholder.hidden = false;
-  for (const list of [pickupList, deliveryList]) list.textContent = "Loading assignments...";
-  changeView("pickup");
-
-  pickupList.setAttribute("aria-busy", "true");
-  deliveryList.setAttribute("aria-busy", "true");
-
-  try {
-    const loaded = await getAssignments();
-    if (requestId !== assignmentRequestId) return;
-    assignments = loaded;
-
-    renderAssignments("pickup", pickupList);
-    renderAssignments("delivery", deliveryList);
-  } catch (error) {
-    if (requestId !== assignmentRequestId) return;
-    console.error("Could not load assignments:", error);
-
-    for (const list of [pickupList, deliveryList]) {
-      list.replaceChildren();
-
-      list.appendChild(
-        createElement(
-          "p",
-          "state-message state-error",
-          error.message || "Unable to load assignments."
-        )
-      );
-    }
-  } finally {
-    if (requestId !== assignmentRequestId) return;
-    pickupList.setAttribute("aria-busy", "false");
-    deliveryList.setAttribute("aria-busy", "false");
-  }
-}
-
-document.getElementById("rider-access-form").addEventListener("submit", event => {
-  event.preventDefault();
-  const input = document.getElementById("rider-token");
-  const newToken = input.value.trim();
-  // An empty field refreshes with the credential already held in memory.
-  // initialize() clears previous data and invalidates outstanding responses.
-  if (newToken) setRiderToken(newToken);
-  input.value = "";
-  initialize();
-});
-document.getElementById("rider-sign-out").addEventListener("click", () => {
-  setRiderToken("");
-  document.getElementById("rider-token").value = "";
-  initialize();
-});
-initialize();

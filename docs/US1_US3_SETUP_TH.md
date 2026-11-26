@@ -1,5 +1,7 @@
 # Backend US1–US3 และการตั้งค่าภายหลัง
 
+> เอกสารนี้บันทึกการทำงานของ sprint เดิม ดู [README รุ่นปัจจุบัน](../README.md) สำหรับ migration, URL เดียวของ Express และงานไรเดอร์แบบรวมตามจุดแวะ ส่วนคำสั่งเตรียมฐาน PostgreSQL และสร้าง database login ในเอกสารนี้ยังใช้อ้างอิงได้
+
 สถานะงานรอบนี้: เขียนโค้ดและเตรียม tests/Postman แล้ว ตรวจเฉพาะ static และ syntax
 ยังไม่ได้ติดตั้ง/เปิด PostgreSQL, สร้างฐานข้อมูล, รัน SQL, เปิดระบบ หรือรัน automated/integration tests
 ผลการทำงานกับ PostgreSQL จริงยังไม่ยืนยัน ไม่ได้ commit หรือ push

@@ -1,19 +1,15 @@
-import { CONFIG } from "./config.js";
-
-// Memory only: never put credentials in a URL, source code or browser storage.
-let riderToken = "";
-export function setRiderToken(token) { riderToken = token.trim(); }
+import { API_BASE_URL, REQUEST_TIMEOUT_MS } from "/config/environment.js";
 
 export async function riderRequest(path) {
-  if (!riderToken) throw new Error("Enter your rider access token above to load assignments.");
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
-      headers: { Authorization: `Bearer ${riderToken}` },
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      credentials: "same-origin",
       cache: "no-store", signal: controller.signal
     });
     const data = await response.json();
+    if (response.status === 401) location.replace("/login");
     if (!response.ok) throw new Error(data.error || `Request failed: HTTP ${response.status}`);
     return data;
   } catch (error) {

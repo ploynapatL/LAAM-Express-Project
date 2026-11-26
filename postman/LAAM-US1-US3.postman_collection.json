@@ -205,7 +205,7 @@
       ]
     },
     {
-      "name": "US2 - other role tab empty",
+      "name": "US2 - unassigned delivery list is empty",
       "request": {
         "method": "GET",
         "header": [
@@ -385,7 +385,7 @@
       ]
     },
     {
-      "name": "US3 - wrong role",
+      "name": "US3 - task belongs to another rider",
       "request": {
         "method": "GET",
         "header": [
@@ -403,7 +403,7 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
               "pm.test(\"JSON response\", () => pm.response.to.be.json);",
               "pm.test(\"Private response is not cached\", () => pm.expect(pm.response.headers.get(\"Cache-Control\")).to.eql(\"no-store\"));"
             ]

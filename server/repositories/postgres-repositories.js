@@ -10,29 +10,34 @@ function createPostgresRepository(db = pool) {
       return result.rows[0] || null;
     },
 
-    async findAssignments(employeeId, type) {
-      if (type === 'pickup') {
-        const result = await db.query(`
+    async findAssignments(employeeId, type = null) {
+      const { rows } = await db.query(`
+        WITH tasks AS (
           SELECT 'P-' || p.pickup_id || '-O-' || o.order_id AS "taskId",
-                 'pickup' AS type, to_char(p.appointment_date, 'YYYY-MM-DD') AS date,
-                 to_char(p.appointment_time, 'HH24:MI') AS "startTime",
-                 NULL::text AS "endTime", p.pickup_location AS address,
-                 COALESCE(p.pickup_result, 'Scheduled') AS status, NULL::text AS note
+                 'pickup' AS type, p.appointment_date AS task_date, p.appointment_time AS task_time,
+                 p.pickup_location AS address, COALESCE(p.pickup_result, 'Scheduled') AS status,
+                 p.route_stop_id, p.pickup_id AS sort_id, o.order_id
           FROM pickup p JOIN orders o ON o.pickup_id = p.pickup_id
-          WHERE p.employee_id = $1
-          ORDER BY p.appointment_date, p.appointment_time, p.pickup_id, o.order_id`, [employeeId]);
-        return result.rows;
-      }
-      if (type !== 'delivery') throw new Error('Unsupported assignment type');
-      const result = await db.query(`
-        SELECT 'D-' || d.delivery_id AS "taskId", 'delivery' AS type,
-               NULL::text AS date, NULL::text AS "startTime", NULL::text AS "endTime",
-               o.receiver_address AS address, d.delivery_status AS status, NULL::text AS note
-        FROM delivery d JOIN parcel p ON p.parcel_id = d.parcel_id
-        JOIN orders o ON o.order_id = p.order_id
-        WHERE d.employee_id = $1 ORDER BY d.delivery_id`, [employeeId]);
-      // delivery_date is an actual delivery event, not an appointment. Do not invent a schedule.
-      return result.rows;
+          WHERE p.employee_id = $1 AND ($2::text IS NULL OR $2 = 'pickup')
+
+          UNION ALL
+
+          SELECT 'D-' || d.delivery_id, 'delivery', NULL::date, NULL::time,
+                 o.receiver_address, d.delivery_status, d.route_stop_id, d.delivery_id, o.order_id
+          FROM delivery d JOIN parcel p ON p.parcel_id = d.parcel_id
+          JOIN orders o ON o.order_id = p.order_id
+          WHERE d.employee_id = $1 AND ($2::text IS NULL OR $2 = 'delivery')
+        )
+        SELECT tasks."taskId", tasks.type, to_char(tasks.task_date, 'YYYY-MM-DD') AS date,
+               to_char(tasks.task_time, 'HH24:MI') AS "startTime", NULL::text AS "endTime",
+               tasks.address, tasks.status, NULL::text AS note,
+               s.route_stop_id AS "stopId", to_char(s.route_date, 'YYYY-MM-DD') AS "routeDate",
+               s.stop_order AS "stopOrder", s.location AS "stopLocation"
+        FROM tasks LEFT JOIN rider_route_stop s ON s.route_stop_id = tasks.route_stop_id
+        ORDER BY CASE WHEN $2::text IS NULL THEN s.route_date END,
+                 CASE WHEN $2::text IS NULL THEN s.stop_order END,
+                 tasks.task_date, tasks.task_time, tasks.sort_id, tasks.order_id`, [employeeId, type]);
+      return rows;
     },
 
     async findTaskContact({ employeeId, type, assignmentId, orderId }) {
