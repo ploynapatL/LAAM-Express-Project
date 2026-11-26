@@ -12,7 +12,7 @@ Both existing rider roles can view pickup and delivery tasks assigned to their o
 | `/api/riders/me/deliveries` | `{ riderId, assignments }` filtered to deliveries |
 | `/api/tasks/:taskId/contact` | `{ taskId, phone }` for a task assigned to the rider |
 
-Each route stop contains `stopId`, `routeDate` (YYYY-MM-DD), `stopOrder`, `location`, and `tasks`. The API returns planned stops by date and stop order, then unplanned tasks grouped by address. An unplanned group's stop ID, date and order are null. Tasks without a known address are displayed separately.
+Each route stop contains `stopId`, `routeDate` (YYYY-MM-DD), `stopOrder`, `location`, and `tasks`. For each day, saved stops keep their configured order. Jobs with only an appointment date follow in appointment order, grouped by address, and receive display numbers after the saved stops. Jobs without a route or appointment date are returned last in a separately numbered group with `routeDate: null`. A computed stop has `stopId: null`. Tasks without a known address are displayed separately.
 
 Each task contains `taskId`, `type` (`pickup` or `delivery`), `date`, `startTime`, `endTime`, `address`, `status`, and `note`. Pickup task IDs have the format `P-<pickup_id>-O-<order_id>`, so one pickup for two orders is represented by two tasks. Pickups need an associated order to show in the list. Delivery IDs have the format `D-<delivery_id>`. Delivery task dates and times stay null because a route date is a day on the plan and `delivery_date` records the actual delivery event.
 

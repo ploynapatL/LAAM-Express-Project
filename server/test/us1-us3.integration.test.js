@@ -108,6 +108,17 @@ test('US1-US3 against real PostgreSQL (transaction rolled back)', {
     const firstStopTask = await makeDelivery(first, 6);
     const unplannedTask = await makeDelivery(null, 7);
     const unplannedTask2 = await makeDelivery(null, 8);
+    async function makePickup(date, time, address) {
+      const { pickup_id } = await insert(`
+        INSERT INTO pickup (employee_id, appointment_date, appointment_time, pickup_location)
+        VALUES ($1, $2, $3, $4) RETURNING pickup_id`, [pickupRider, date, time, address]);
+      const { order_id } = await insert(`
+        INSERT INTO orders (customer_id, pickup_id) VALUES ($1, $2) RETURNING order_id`, [customer, pickup_id]);
+      return `P-${pickup_id}-O-${order_id}`;
+    }
+    const late = await makePickup(day, '15:00', 'Late appointment');
+    const early = await makePickup(day, '09:00', 'Early appointment');
+    const nextDay = await makePickup('2026-11-18', '09:00', 'Early appointment');
     const response = await request('/api/riders/me/route');
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('cache-control'), 'no-store');
@@ -115,11 +126,17 @@ test('US1-US3 against real PostgreSQL (transaction rolled back)', {
     assert.deepEqual(stops.map(stop => [stop.routeDate, stop.stopOrder, stop.location]), [
       [day, 1, 'Integration First Stop'],
       [day, 2, 'Integration Condo'],
-      [null, null, 'Integration delivery address']
+      [day, 3, 'Early appointment'],
+      [day, 4, 'Late appointment'],
+      ['2026-11-18', 1, 'Early appointment'],
+      [null, 1, 'Integration delivery address']
     ]);
     assert.deepEqual(stops[0].tasks.map(task => task.taskId), [firstStopTask]);
     assert.deepEqual(stops[1].tasks.map(task => task.taskId), [firstTask, secondTask, ...condoDeliveries]);
-    assert.deepEqual(stops[2].tasks.map(task => task.taskId), [unplannedTask, unplannedTask2]);
+    assert.deepEqual(stops.slice(2).map(stop => stop.tasks.map(task => task.taskId)), [
+      [early], [late], [nextDay], [unplannedTask, unplannedTask2]
+    ]);
+    assert.equal(stops[2].stopId, null);
     assert.equal(stops[1].tasks[2].date, null);
     assert.equal(stops[1].tasks[2].phone, undefined);
     const ownContact = await request(`/api/tasks/${condoDeliveries[0]}/contact`);

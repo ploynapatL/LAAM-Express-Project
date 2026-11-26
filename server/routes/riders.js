@@ -17,19 +17,33 @@ function parseRiderTokens(value) {
 }
 
 function groupStops(assignments) {
-  const groups = new Map();
+  const days = new Map();
   for (const { stopId, routeDate, stopOrder, stopLocation, ...task } of assignments) {
+    const day = routeDate ?? task.date;
+    if (!days.has(day)) days.set(day, new Map());
+    const stops = days.get(day);
     const address = task.address?.trim();
     const key = stopId ? `stop:${stopId}`
       : address ? `address:${address.replace(/\s+/g, ' ').toLowerCase()}` : task.taskId;
-    if (!groups.has(key)) {
-      groups.set(key, {
-        stopId, routeDate, stopOrder, location: stopLocation || address || null, tasks: []
+    if (!stops.has(key)) {
+      stops.set(key, {
+        stopId, routeDate: day, stopOrder, location: stopLocation || address || null, tasks: []
       });
     }
-    groups.get(key).tasks.push(task);
+    stops.get(key).tasks.push(task);
   }
-  return [...groups.values()];
+
+  // Repository rows put saved stops first, then jobs in appointment order.
+  // Keep the saved numbers and continue numbering the remaining stops for each day.
+  const orderedDates = [...days.keys()].filter(Boolean).sort();
+  if (days.has(null)) orderedDates.push(null);
+  return orderedDates.flatMap(day => {
+    let lastOrder = 0;
+    return [...days.get(day).values()].map(stop => {
+      lastOrder = stop.stopOrder ?? lastOrder + 1;
+      return { ...stop, stopOrder: lastOrder };
+    });
+  });
 }
 
 function createRiderRouter({ repository, riderTokens, sessionAccount }) {

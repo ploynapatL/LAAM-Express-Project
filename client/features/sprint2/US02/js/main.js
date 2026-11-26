@@ -122,10 +122,10 @@ function renderStop(stop) {
   const card = element("article", "route-stop");
   const header = element("header", "stop-header");
   const title = stop.location || "Location not available";
-  header.append(element("h3", "", stop.stopOrder ? `${stop.stopOrder}. ${title}` : title));
+  header.append(element("h3", "", `${stop.stopOrder}. ${title}`));
   const pickups = stop.tasks.filter(task => task.type === "pickup").length;
   const deliveries = stop.tasks.length - pickups;
-  header.append(element("p", "stop-counts", `${pickups} pickup · ${deliveries} delivery`));
+  header.append(element("p", "stop-counts", `Pickups: ${pickups} · Deliveries: ${deliveries}`));
   const tasks = element("ul", "stop-tasks");
   tasks.append(...stop.tasks.map(task => renderTask(task, stop)));
   card.append(header, tasks);
@@ -137,7 +137,7 @@ function renderRoute(stops) {
   for (const stop of stops) {
     if (!days.has(stop.routeDate)) {
       const day = element("section", "route-day");
-      day.append(element("h2", "", stop.routeDate ? formatDate(stop.routeDate) : "Unscheduled stops"));
+      day.append(element("h2", "", stop.routeDate ? formatDate(stop.routeDate) : "Stops without a scheduled date"));
       days.set(stop.routeDate, day);
     }
     days.get(stop.routeDate).append(renderStop(stop));
