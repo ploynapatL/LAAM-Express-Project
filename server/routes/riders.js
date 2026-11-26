@@ -1,5 +1,6 @@
 const express = require('express');
 const { timingSafeEqual } = require('node:crypto');
+const { RIDER_ROLES } = require('./accounts');
 
 // Optional Bearer credentials for existing API clients. Website riders use sessions.
 function parseRiderTokens(value) {
@@ -15,9 +16,24 @@ function parseRiderTokens(value) {
   return tokens;
 }
 
+function groupStops(assignments) {
+  const groups = new Map();
+  for (const { stopId, routeDate, stopOrder, stopLocation, ...task } of assignments) {
+    const address = task.address?.trim();
+    const key = stopId ? `stop:${stopId}`
+      : address ? `address:${address.replace(/\s+/g, ' ').toLowerCase()}` : task.taskId;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        stopId, routeDate, stopOrder, location: stopLocation || address || null, tasks: []
+      });
+    }
+    groups.get(key).tasks.push(task);
+  }
+  return [...groups.values()];
+}
+
 function createRiderRouter({ repository, riderTokens, sessionAccount }) {
   const router = express.Router();
-  const roles = { pickup: 'Pickup Rider', delivery: 'Delivery Rider' };
   const credentials = Object.entries(riderTokens).map(([token, id]) => [Buffer.from(token), id]);
   async function authenticate(req, res, next) {
     res.set('Cache-Control', 'no-store');
@@ -34,7 +50,7 @@ function createRiderRouter({ repository, riderTokens, sessionAccount }) {
         return res.status(401).json({ error: 'Authentication required' });
       }
       const employee = credential ? await repository.findEmployee(credential[1]) : account;
-      if (!employee || !Object.values(roles).includes(employee.role)) {
+      if (!RIDER_ROLES.includes(employee?.role)) {
         return res.status(403).json({ error: 'Rider access required' });
       }
       req.rider = employee;
@@ -45,13 +61,22 @@ function createRiderRouter({ repository, riderTokens, sessionAccount }) {
   router.get('/riders/me', authenticate, (req, res) => {
     res.json({ riderId: req.rider.employee_id, role: req.rider.role });
   });
-  for (const type of Object.keys(roles)) {
-    router.get(`/riders/me/${type === 'pickup' ? 'pickups' : 'deliveries'}`, authenticate, async (req, res, next) => {
+  router.get('/riders/me/route', authenticate, async (req, res, next) => {
+    try {
+      const riderId = req.rider.employee_id;
+      res.json({ riderId, stops: groupStops(await repository.findAssignments(riderId)) });
+    } catch (error) { next(error); }
+  });
+
+  for (const [path, type] of [['pickups', 'pickup'], ['deliveries', 'delivery']]) {
+    router.get(`/riders/me/${path}`, authenticate, async (req, res, next) => {
       try {
-        // The UI loads both tabs. The other rider role has no assignments of this type.
-        const assignments = req.rider.role === roles[type]
-          ? await repository.findAssignments(req.rider.employee_id, type) : [];
-        res.json({ riderId: req.rider.employee_id, assignments });
+        const riderId = req.rider.employee_id;
+        const rows = await repository.findAssignments(riderId, type);
+        const assignments = rows.map(({ taskId, date, startTime, endTime, address, status, note }) => ({
+          taskId, type, date, startTime, endTime, address, status, note
+        }));
+        res.json({ riderId, assignments });
       } catch (error) { next(error); }
     });
   }
@@ -62,7 +87,6 @@ function createRiderRouter({ repository, riderTokens, sessionAccount }) {
       return res.status(400).json({ error: 'Invalid task ID' });
     }
     const type = match[1] ? 'pickup' : 'delivery';
-    if (req.rider.role !== roles[type]) return res.status(403).json({ error: 'Task type is not authorized' });
     try {
       // Ownership is part of the SQL WHERE clause, including pickup/order association.
       const contact = await repository.findTaskContact({

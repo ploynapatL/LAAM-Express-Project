@@ -1,62 +1,30 @@
-# US2-US3 PostgreSQL API contract
+# Rider Assignments API
 
-Base URL: `http://localhost:3001`. All operations are GET/read-only.
-These contracts are implemented but have not yet been verified against a running database.
+Express serves the website and API on the same origin. The website uses the account session cookie. Existing API clients can send a Bearer token configured in `RIDER_TOKENS_JSON`.
 
-Send `Authorization: Bearer <opaque-token>` for all routes below. Configure tokens only on
-the server via `RIDER_TOKENS_JSON` mapping secrets (32+ characters without whitespace) to
-integer `employee.employee_id`. Missing configuration denies all rider requests.
-`employee.role` is re-read for every request. Browser-supplied employee IDs are not used.
-This temporary credential mechanism requires replacement when the team defines login/session auth.
+Both existing rider roles can view pickup and delivery tasks assigned to their own employee ID. The server obtains the employee ID from the session or token.
 
-| Endpoint | Success |
+| GET endpoint | Result |
 |---|---|
-| `/api/riders/me` | `{ "riderId": 1, "role": "Pickup Rider" }` |
-| `/api/riders/me/pickups` | `{ "riderId": 1, "assignments": [...] }` |
-| `/api/riders/me/deliveries` | `{ "riderId": 2, "assignments": [...] }` |
-| `/api/tasks/:taskId/contact` | `{ "taskId": "P-1-O-1", "phone": "0811111111" }` |
+| `/api/riders/me` | Rider ID and employee role |
+| `/api/riders/me/route` | `{ riderId, stops }` with both types of task |
+| `/api/riders/me/pickups` | `{ riderId, assignments }` filtered to pickups |
+| `/api/riders/me/deliveries` | `{ riderId, assignments }` filtered to deliveries |
+| `/api/tasks/:taskId/contact` | `{ taskId, phone }` for a task assigned to the rider |
 
-Assignment example from fresh seed:
+Each route stop contains `stopId`, `routeDate` (YYYY-MM-DD), `stopOrder`, `location`, and `tasks`. The API returns planned stops by date and stop order, then unplanned tasks grouped by address. An unplanned group's stop ID, date and order are null. Tasks without a known address are displayed separately.
 
-```json
-{
-  "taskId": "P-1-O-1",
-  "type": "pickup",
-  "date": "2026-11-16",
-  "startTime": "10:00",
-  "endTime": null,
-  "address": "Bangkok, Customer A",
-  "status": "Successful",
-  "note": null
-}
-```
+Each task contains `taskId`, `type` (`pickup` or `delivery`), `date`, `startTime`, `endTime`, `address`, `status`, and `note`. Pickup task IDs have the format `P-<pickup_id>-O-<order_id>`, so one pickup for two orders is represented by two tasks. Pickups need an associated order to show in the list. Delivery IDs have the format `D-<delivery_id>`. Delivery task dates and times stay null because a route date is a day on the plan and `delivery_date` records the actual delivery event.
 
-Pickup task IDs include both pickup and order IDs because one appointment can cover
-multiple orders with different senders. Pickups without orders are omitted. Only the assigned
-`Pickup Rider` sees these tasks. Contact returns the order's `sender_phone`.
-Delivery IDs are `D-<delivery_id>` and expose each assigned delivery attempt separately.
-Only the assigned `Delivery Rider` sees these tasks; contact returns `orders.receiver_phone`.
-Delivery address is `orders.receiver_address`; all schedule fields are null because
-the schema has no delivery appointment. `delivery_date` is not used as a scheduled date.
-Pickup endTime and note are also unavailable. Nullable addresses are preserved as null.
-Lists contain current and completed tasks, ordered by appointment then IDs (delivery by ID).
-The other rider role's list returns 200 with `assignments: []`, supporting the two-tab UI.
+Pickup contact returns the order's sender phone. Delivery contact returns the receiver phone. The contact query checks the employee's assignment and, for pickups, the association with the order.
 
 | HTTP | Meaning |
 |---|---|
-| 200 | Authorized result; assignment list may be empty |
-| 400 | Invalid task ID (positive PostgreSQL integer IDs required) |
-| 401 | Missing/invalid bearer credential; includes `WWW-Authenticate: Bearer` |
-| 403 | Missing employee, non-rider employee or wrong role for contact task type |
-| 404 | Task missing, not owned, pickup/order mismatch, or phone missing/blank |
-| 500 | Repository/database failure; no SQL or credential details returned |
+| 200 | Authorized result, including an empty list |
+| 400 | Malformed task ID |
+| 401 | Missing or invalid authentication |
+| 403 | Account is ineligible for rider access |
+| 404 | Task does not belong to the rider, does not exist, or has no contact number |
+| 500 | Repository or database error |
 
-Errors use `{ "error": "message" }`. Rider responses include `Cache-Control: no-store`
-and vary by Authorization. The contact query includes employee ownership and order association
-in its WHERE clause. It does not fall back to account-holder phone or expose customer records.
-Frontend validates a dialable number before creating a `tel:` link and keeps credentials in
-memory only. Data from older requests is discarded when credentials or selected task change.
-
-The trusted backend read role is prepared in `database/backend_read_access.sql`.
-It is not row-level security and must never be handed to browser users.
-See [setup and pending assumptions](US1_US3_SETUP_TH.md).
+Responses use `Cache-Control: no-store` and vary by Authorization and Cookie. See [the current setup guide](../README.md) for required migrations.

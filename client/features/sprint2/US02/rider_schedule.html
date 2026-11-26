@@ -1,429 +1,90 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
-  <meta name="theme-color" content="#3d5a80" />
-
-  <title>Rider Schedule | LAAM Express</title>
-
-  <!-- US-02 stylesheet -->
-  <link rel="stylesheet" href="/features/sprint2/US02/css/styles.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#3d5a80">
+  <title>Rider Assignments | LAAM Express</title>
+  <link rel="stylesheet" href="/features/sprint2/US02/css/styles.css">
+  <link rel="stylesheet" href="/assets/css/site.css">
   <script type="module" src="/features/sprint2/US02/js/main.js"></script>
-  <link rel="stylesheet" href="/assets/css/site.css" />
 </head>
-
 <body>
-
-  <!-- ====================================
-       EMPLOYEE HEADER
-       ==================================== -->
   <header class="rider-header">
     <div class="header-inner">
-
-      <div class="brand">
-        <span>
-          LAAM <strong>EXPRESS</strong>
-        </span>
-        <small>RIDER PORTAL</small>
-      </div>
-
-      <!-- Return to existing homepage -->
-      <a
-        class="header-home"
-        href="/"
-        aria-label="Return to LAAM Express homepage"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          aria-hidden="true"
-        >
-          <path d="m3 10 9-7 9 7" />
-          <path d="M5 9v12h14V9" />
-          <path d="M9 21v-8h6v8" />
-        </svg>
-        <span>Home</span>
-      </a>
-
+      <div class="brand"><span>LAAM <strong>EXPRESS</strong></span><small>RIDER PORTAL</small></div>
+      <a class="header-home" href="/">Home</a>
     </div>
   </header>
 
-
-
-
-  <!-- ====================================
-       RIDER WORKSPACE
-       ==================================== -->
-  <main
-    class="rider-workspace"
-    id="rider-workspace"
-  >
-
-    <!-- ================================
-         PICKUP ASSIGNMENT — US-02
-         ================================ -->
-    <section
-      id="pickup-screen"
-      class="workspace-screen assignment-screen"
-      aria-labelledby="pickup-title"
-    >
-
+  <main class="rider-workspace">
+    <section id="route-screen" aria-labelledby="route-title">
       <div class="screen-heading">
-        <span class="heading-icon pickup-icon"
-              aria-hidden="true">
-          📦
-        </span>
-
+        <span class="heading-icon route-icon" aria-hidden="true">📍</span>
         <div>
-          <p class="eyebrow">RIDER ASSIGNMENTS</p>
-          <h1 id="pickup-title">
-            Pickup Assignment
-          </h1>
-          <p>Your scheduled pickup tasks</p>
+          <h1 id="route-title" tabindex="-1">Assignments</h1>
+          <p>Pickups and deliveries by route stop</p>
         </div>
       </div>
-
-      <!-- JavaScript will render pickup cards -->
-      <div
-        id="pickup-list"
-        class="assignment-list"
-        aria-live="polite"
-        aria-busy="false"
-      >
-        <div class="state-message">
-          <p>Loading pickup assignments...</p>
-        </div>
-      </div>
-
+      <p id="route-message" class="state-message" role="status">Loading assignments…</p>
+      <div id="route-list" class="route-list" aria-busy="true"></div>
     </section>
 
-
-    <!-- ================================
-         DELIVERY ASSIGNMENT — US-02
-         ================================ -->
-    <section
-      id="delivery-screen"
-      class="workspace-screen assignment-screen"
-      aria-labelledby="delivery-title"
-      hidden
-    >
-
-      <div class="screen-heading">
-        <span class="heading-icon delivery-icon"
-              aria-hidden="true">
-          🚚
-        </span>
-
-        <div>
-          <p class="eyebrow">RIDER ASSIGNMENTS</p>
-          <h1 id="delivery-title">
-            Delivery Assignment
-          </h1>
-          <p>Your scheduled delivery tasks</p>
-        </div>
-      </div>
-
-      <!-- JavaScript will render delivery cards -->
-      <div
-        id="delivery-list"
-        class="assignment-list"
-        aria-live="polite"
-        aria-busy="false"
-      >
-        <div class="state-message">
-          <p>Loading delivery assignments...</p>
-        </div>
-      </div>
-
-    </section>
-
-
-    <!-- ================================
-         ASSIGNMENT DETAIL
-         ================================ -->
-    <section
-      id="detail-screen"
-      class="workspace-screen detail-screen"
-      aria-labelledby="detail-title"
-      hidden
-    >
-
+    <section id="detail-screen" class="detail-screen" aria-labelledby="detail-title" hidden>
       <div class="detail-heading">
-        <button
-          type="button"
-          id="back-to-assignments"
-          class="back-btn"
-          aria-label="Back to assignments"
-        >
-          ←
-        </button>
-
-        <h2 id="detail-title">
-          Assignment Detail
-        </h2>
+        <button type="button" id="back-to-assignments" class="back-btn" aria-label="Back to assignments">←</button>
+        <h2 id="detail-title" tabindex="-1">Assignment details</h2>
       </div>
-
-      <!-- No task selected initially -->
-      <div
-        id="detail-placeholder"
-        class="detail-placeholder"
-      >
-        <span aria-hidden="true">📋</span>
-        <h3>No assignment selected</h3>
-        <p>
-          Select an assignment to view its details.
-        </p>
+      <div class="detail-task-header">
+        <strong id="detail-task-id"></strong>
+        <span id="detail-status" class="status-badge"></span>
       </div>
-
-
-      <!-- Populated later by US-02 JavaScript -->
-      <div id="detail-content" hidden>
-
-        <!-- Selected task -->
-        <div class="detail-task-header">
-          <strong id="detail-task-id">—</strong>
-
-          <span
-            id="detail-status"
-            class="status-badge"
-          ></span>
+      <div class="detail-body">
+        <div class="detail-group">
+          <h3 id="detail-location-title">Location</h3>
+          <div class="detail-value-box"><p id="detail-location"></p></div>
         </div>
-
-        <div class="detail-body">
-
-          <!-- Schedule -->
-          <div class="detail-group">
-            <h3>Scheduled Time</h3>
-
-            <div class="detail-value-box">
-              <p id="detail-date">—</p>
-              <p id="detail-time">—</p>
+        <div class="detail-group" id="detail-appointment" hidden>
+          <h3>Pickup appointment</h3>
+          <div class="detail-value-box"><p id="detail-time"></p></div>
+        </div>
+        <div class="detail-group customer-contact-group" aria-labelledby="contact-title">
+          <h3 id="contact-title">Customer contact</h3>
+          <p id="contact-message" class="contact-message" role="status"></p>
+          <div id="contact-content" class="customer-phone-box" hidden>
+            <div class="customer-phone-information">
+              <strong id="customer-phone"></strong>
+              <span>Customer phone number</span>
             </div>
+            <a id="call-customer" class="customer-call-button" aria-label="Call customer"><span aria-hidden="true">☎</span></a>
           </div>
-
-          <!-- Location -->
-          <div class="detail-group">
-            <h3 id="detail-location-title">
-              Assignment Location
-            </h3>
-
-            <div class="detail-value-box">
-              <p id="detail-location">—</p>
-            </div>
-          </div>
-
-          <!-- Customer note -->
-          <div class="detail-group">
-            <h3>Note from Customer</h3>
-
-            <div class="detail-value-box">
-              <p id="detail-note">
-                No note provided.
-              </p>
-            </div>
-          </div>
-
-          
-<!-- ==========================================
-     SPRINT 2 — US-03
-     CUSTOMER CONTACT INFORMATION
-
-     Displays only the phone number of the
-     customer assigned to the selected task.
-
-     The phone number is retrieved by US-03.
-     ========================================== -->
-
-<div
-  class="detail-group customer-contact-group"
-  id="us03-contact-section"
-  aria-labelledby="us03-contact-title"
->
-
-  <h3 id="us03-contact-title">
-    Customer Contact
-  </h3>
-
-  <!-- Initial state: contact not retrieved -->
-  <p
-    id="us03-contact-message"
-    class="contact-message"
-    role="status"
-    aria-live="polite"
-  >
-    Customer contact information is not loaded yet.
-  </p>
-
-  <!-- Hidden until contact retrieval succeeds -->
-  <div
-    id="us03-contact-content"
-    class="customer-contact-content"
-    hidden
-  >
-
-    <div class="customer-phone-box">
-
-      <span
-        class="customer-phone-icon"
-        aria-hidden="true"
-      >
-        &#9742;
-      </span>
-
-      <div class="customer-phone-information">
-
-        <strong id="us03-phone-number">
-          —
-        </strong>
-
-        <span>Customer phone number</span>
-
-      </div>
-
-      <!--
-        US-03:
-        The tel: URL will be assigned by
-        JavaScript only after authorization.
-      -->
-      <a
-        id="us03-call-button"
-        class="customer-call-button"
-        href="#"
-        aria-label="Call customer"
-        hidden
-      >
-        <svg
-          viewBox="0 0 24 24"
-          width="20"
-          height="20"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path
-            d="M22 16.92v3a2 2 0 0 1-2.18 2
-               19.79 19.79 0 0 1-8.63-3.07
-               19.5 19.5 0 0 1-6-6
-               19.79 19.79 0 0 1-3.07-8.67
-               A2 2 0 0 1 4.11 2h3
-               a2 2 0 0 1 2 1.72
-               c.12.96.36 1.91.7 2.81
-               a2 2 0 0 1-.45 2.11L8.09 9.91
-               a16 16 0 0 0 6 6l1.27-1.27
-               a2 2 0 0 1 2.11-.45
-               c.9.34 1.85.58 2.81.7
-               A2 2 0 0 1 22 16.92z"
-          />
-        </svg>
-      </a>
-
-    </div>
-
-  </div>
-
-</div>
-
-<!-- END OF US-03 CUSTOMER CONTACT SECTION -->
-
-
         </div>
       </div>
-
     </section>
 
-
-    <!-- ================================
-         SETTINGS
-         ================================ -->
-    <section
-      id="settings-screen"
-      class="workspace-screen settings-screen"
-      aria-labelledby="settings-title"
-      hidden
-    >
-
+    <section id="settings-screen" class="settings-screen" aria-labelledby="settings-title" hidden>
       <div class="screen-heading">
-        <span class="heading-icon settings-icon"
-              aria-hidden="true">
-          ⚙️
-        </span>
-
-        <div>
-          <h1 id="settings-title">Settings</h1>
-        </div>
+        <span class="heading-icon settings-icon" aria-hidden="true">⚙</span>
+        <h1 id="settings-title" tabindex="-1">Settings</h1>
       </div>
-
       <div class="profile-card" id="rider-profile">
         <h2>My account</h2>
         <strong data-account-name></strong>
         <p data-account-email></p>
-        <p data-account-role></p>
         <button type="button" class="site-secondary" data-open-password>Change password</button>
         <button type="button" class="site-primary" data-logout>Log out</button>
         <p role="alert" data-account-error hidden></p>
       </div>
     </section>
-
   </main>
 
-
-  <!-- ====================================
-       EMPLOYEE BOTTOM NAVIGATION
-       PICKUP | DELIVERY | SETTINGS
-       ==================================== -->
-  <nav
-    class="bottom-navbar"
-    aria-label="Rider navigation"
-  >
-
-    <!-- Pickup -->
-    <button
-      type="button"
-      id="nav-pickup"
-      class="nav-item active"
-      aria-current="page"
-    >
-      <span class="nav-icon"
-            aria-hidden="true">📦</span>
-      <span>Pickup</span>
+  <nav class="bottom-navbar" aria-label="Rider workspace">
+    <button type="button" id="nav-route" class="nav-item active" aria-current="page">
+      <span class="nav-icon" aria-hidden="true">📋</span><span>Assignments</span>
     </button>
-
-
-    <!-- Delivery -->
-    <button
-      type="button"
-      id="nav-delivery"
-      class="nav-item"
-    >
-      <span class="nav-icon"
-            aria-hidden="true">🚚</span>
-      <span>Delivery</span>
+    <button type="button" id="nav-settings" class="nav-item">
+      <span class="nav-icon" aria-hidden="true">⚙</span><span>Settings</span>
     </button>
-
-
-    <!-- Settings -->
-    <button
-      type="button"
-      id="nav-settings"
-      class="nav-item"
-    >
-      <span class="nav-icon"
-            aria-hidden="true">⚙</span>
-      <span>Settings</span>
-    </button>
-
   </nav>
-
-
 </body>
 </html>

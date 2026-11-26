@@ -19,10 +19,14 @@ async function startServer() {
   // Verify PostgreSQL is accessible before starting Express
   await pool.query("SELECT 1");
   const { rows: [tables] } = await pool.query(
-    "SELECT to_regclass('web_account') AS account, to_regclass('web_session') AS session"
+    `SELECT to_regclass('web_account') AS account, to_regclass('web_session') AS session,
+            to_regclass('rider_route_stop') AS route_stop`
   );
   if (!tables.account || !tables.session) {
     throw new Error('Run database/migrations/002_accounts.sql before starting LAAM Express.');
+  }
+  if (!tables.route_stop) {
+    throw new Error('Run database/migrations/003_rider_route_stops.sql before starting LAAM Express.');
   }
 
   console.log("PostgreSQL connected successfully!");

@@ -1,10 +1,10 @@
-import { CONFIG } from "./config.js";
+import { API_BASE_URL, REQUEST_TIMEOUT_MS } from "/config/environment.js";
 
 export async function riderRequest(path) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetch(`${CONFIG.API_BASE_URL}${path}`, {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
       credentials: "same-origin",
       cache: "no-store", signal: controller.signal
     });
